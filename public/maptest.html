@@ -1,0 +1,4 @@
+<!doctype html><html><body style="margin:0"><script src="mapgen.js"></script><script src="render.js"></script><script>
+const t0=performance.now();const M=MapGen();const B=Render.bake(M);window.bakeMs=performance.now()-t0;
+const c=B.world;const g=c.getContext('2d');Render.drawAnims(g,B,{x:0,y:0},B.W,B.H,5000);window.B=B;window.done=1;
+</script></body></html>

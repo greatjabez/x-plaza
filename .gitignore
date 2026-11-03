@@ -1,0 +1,7 @@
+node_modules/
+*_backup*
+*.png
+!public/**
+*.log
+shot*.js
+test.js
