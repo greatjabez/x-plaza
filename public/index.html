@@ -35,7 +35,7 @@ button:hover{background:#fbe6ec}button:active{transform:translateY(1px);box-shad
 <button id="go" disabled style="width:100%;margin-top:10px">마을 불러오는 중...</button>
 <p style="font-size:12px;opacity:.8">이동 WASD/방향키/터치 · 모션 1앉기 2자기 3눕기 4달리기(Shift 누르기) 5점프(Space) 6인사 7춤 8울기 9화내기 0발사 · 🔫 발사: 마우스 왼쪽 클릭(커서 쪽으로 조준) · X 프로필: 캐릭터 오른쪽 클릭 → 프로필 방문하기 · 이모지 Z X C V B N · Enter 채팅 · 의자 옆에서 1 또는 클릭하면 앉아요</p></div></div>
 <div id="died" class="ov" style="display:none"><div class="card" style="text-align:center"><h1>💀 쓰러졌어요</h1><p id="dby"></p><button onclick="location.reload()">다시 접속하기</button></div></div>
-<script src="mapgen.js"></script><script src="items.js"></script><script src="chars2.js"></script><script src="render.js"></script><script src="render6.js"></script>
+<script src="mapgen.js"></script><script src="items.js"></script><script src="chars3.js"></script><script src="render.js"></script><script src="render6.js"></script>
 <script>
 const SKIN=['#ffe0c4','#f5c9a0'],SKN=['여자','남자'];
 const HS=['단발','긴머리','삐죽','양갈래','민머리'],HCOL=['#9a6e4e','#f0d48a','#5a5a72','#f2aaaa','#a0cde8','#c4aef0','#f4f4f4'];
@@ -127,10 +127,10 @@ function drawCharAt(g,X,Y,p,now){const L=p.look||[0,0,0,0,0],id=p.id||0,act=p.ac
 
  const gb=(dir==1)&&!rot&&!sit;if(gb)drawGun(g,X+xo,Y,p,now,yo);
  const _sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
- if(rot){g.save();g.translate(X+xo,Y-6);g.rotate(rot);g.drawImage(img,-14,-36,28,44);g.restore()}
- else if(sit){g.drawImage(img,0,0,84,102,X-14+xo,Y-34+yo,28,34);g.fillStyle='#4a3a46';g.beginPath();g.roundRect(X-6,Y-2,5,3,1.2);g.roundRect(X+1,Y-2,5,3,1.2);g.fill()}
- else if(sx!=1||sy!=1){const w=Math.round(28*sx),h=Math.round(44*sy);g.drawImage(img,X-(w>>1)+xo,Y+2-h+yo,w,h)}
- else g.drawImage(img,X-14+xo,Y-42+yo,28,44);
+ if(rot){g.save();g.translate(X+xo,Y-6);g.rotate(rot);g.drawImage(img,-18.67,-36,37.33,44);g.restore()}
+ else if(sit){g.drawImage(img,0,0,112,102,X-18.67+xo,Y-34+yo,37.33,34);g.fillStyle='#4a3a46';g.beginPath();g.roundRect(X-6,Y-2,5,3,1.2);g.roundRect(X+1,Y-2,5,3,1.2);g.fill()}
+ else if(sx!=1||sy!=1){const w=37.33*sx,h=44*sy;g.drawImage(img,X-w/2+xo,Y+2-h+yo,w,h)}
+ else g.drawImage(img,X-18.67+xo,Y-42+yo,37.33,44);
  g.imageSmoothingEnabled=_sm;if(!gb&&!rot&&!sit)drawGun(g,X+xo,Y,p,now,yo);
  if(act=='sleep'){g.fillStyle='#fff';g.font='bold 8px monospace';const z=(now/500|0)%3;for(let i=0;i<=z;i++)g.fillText('z',X+8+i*4,Y-30-i*5)}
  if(act=='cry'&&dir!=1){g.fillStyle='#7fd0ff';const a=(now/80|0)%6;g.fillRect(X-2,Y-24+a+yo,1,2);g.fillRect(X+4,Y-24+((a+3)%6)+yo,1,2)}
