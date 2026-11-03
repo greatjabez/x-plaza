@@ -1,6 +1,6 @@
 // v6 storybook pastel renderer: prerenders ground + depth-sorted sprites from generated assets
 (function(G){
-const ASSETS=['tree_pink1','tree_pink2','tree_mint1','tree_mint2','topiary','fbush','fl_tulip','fl_daisy','fl_bluebell','fl_clover','toadstool','lilypad','rock','tuft','arch','well','lantern','bench_f','bench_s','sign','fence','campfire','log','fountain','tex_grass','tex_dirt','tex_water','hill','rocket'];
+const ASSETS=['tree_pink1','tree_pink2','tree_mint1','tree_mint2','topiary','fbush','fl_tulip','fl_daisy','fl_bluebell','fl_clover','toadstool','lilypad','rock','tuft','arch','well','lantern','bench_f','bench_s','sign','fence','campfire','log','fountain','tex_grass','tex_dirt','tex_water','hill','rocket','plaza','temple','terrain'];
 function load(){return Promise.all(ASSETS.map(n=>new Promise(r=>{const i=new Image();i.onload=()=>r([n,i]);i.onerror=()=>r([n,null]);i.src='assets/'+n+'.png'}))).then(l=>Object.fromEntries(l))}
 function C(w,h){const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';return[c,g]}
 function H(x,y,s){let h=(x*374761393+y*668265263+s*982451653)|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
@@ -112,6 +112,18 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
   // back corner tulip planters
   [X0+T+2,X0+Wp-2*T-2].forEach(x=>{const y=Y0-e+T-4;gg.fillStyle='#d9a98a';gg.beginPath();gg.roundRect(x,y+6,14,9,2);gg.fill();gg.fillStyle='#ecc2a4';gg.fillRect(x,y+6,14,2);const f=spr('fl_tulip',16);gg.drawImage(f.c,x-1,y-f.h+10)});
   gg.restore()}
+ if(M.tr&&I.terrain){const P=M.tr;gg.save();gg.fillStyle='rgba(80,110,60,.16)';gg.beginPath();gg.ellipse(P.ox+512*P.s,P.oy+700*P.s,470*P.s,70*P.s,0,0,7);gg.fill();gg.restore();gg.drawImage(I.terrain,P.ox,P.oy,P.iw*P.s,P.ih*P.s)}
+ // painted raised temple plaza (platform baked; temple, fountain, benches depth-sorted)
+ if(M.pz&&I.plaza){const P=M.pz,s=P.s;
+  gg.save();gg.fillStyle='rgba(80,110,60,.16)';gg.beginPath();gg.ellipse(P.ox+512*s+5,P.oy+560*s,345*s,150*s,0,0,7);gg.fill();gg.restore();
+  gg.drawImage(I.plaza,P.ox,P.oy,P.iw*s,P.ih*s);
+  // extra grass on the platform floor (display coords = logical - TE)
+  gg.save();for(let n=0;n<140;n++){const a=H(n,3,91)*Math.PI*2,r=Math.sqrt(H(n,4,91)),u=512+Math.cos(a)*r*290,v=500+Math.sin(a)*r*120;if(u>330&&u<690&&v<455)continue;if(Math.abs(u-512)<95&&Math.abs(v-540)<70)continue;const x=P.ox+u*s,y=P.oy+v*s;
+   if(n%3==0){gg.fillStyle='rgba(150,190,110,.55)';gg.beginPath();gg.ellipse(x,y,6+H(n,5,91)*8,3+H(n,6,91)*3,0,0,7);gg.fill()}const t=spr(n%5==0?'fl_clover':'tuft',n%5==0?9:8);if(t)gg.drawImage(t.c,x-t.w/2,y-t.h)}gg.restore();
+  if(I.temple){const tw=I.temple.width*s,th=I.temple.height*s,[tc,tg]=C(tw,th);tg.drawImage(I.temple,0,0,tw,th);objs.push({img:tc,x:P.ox+340*s,y:P.oy,w:tw,h:th,base:P.oy+447*s+M.TE,k:'temple',low:false,scale:s})}
+  const f=spr('fountain',150,true);if(f){objs.push({img:f.c,x:Math.round(P.fountain.x-f.w/2),y:Math.round(P.fountain.y-M.TE+30-f.h),w:f.w,h:f.h,base:P.fountain.y+18,k:'fountain',low:false})}
+  P.benches.forEach(b=>{const bn=spr('bench_s',50,false,b.dir==2);if(bn)objs.push({img:bn.c,x:Math.round(b.x-bn.w/2),y:Math.round(b.y-M.TE+6-bn.h),w:bn.w,h:bn.h,base:b.y+2,k:'bench',low:false})});
+  statue={x:P.statue.x,base:P.statue.base,lift:P.statue.lift}}
  // painted launchpad hill (baked into ground layer) + rocket/tower sprite (depth-sorted object)
  if(M.launch&&M.launch.hill&&I.hill){const h=M.launch.hill,L=M.launch;
   gg.save();gg.fillStyle='rgba(80,110,60,.18)';gg.beginPath();gg.ellipse(h.ox+527*h.s+6,h.oy+600*h.s,430*h.s,150*h.s,0,0,7);gg.fill();gg.restore();
