@@ -36,8 +36,8 @@ wss.on('connection',ws=>{let me=null,last={chat:0,emo:0,atk:0,mv:0},msgs=0,win=D
    me.act=a;bc({t:'act',id:me.id,a})}
   else if(m.t=='wave'){if(now-last.emo<500)return;last.emo=now;bc({t:'wave',id:me.id})}
   else if(m.t=='emo'){if(now-last.emo<500)return;last.emo=now;const e=EMO[m.i|0];if(e)bc({t:'emo',id:me.id,e})}
-  else if(m.t=='atk'){if(now-last.atk<500)return;last.atk=now;const dmg=me.weapon=='axe'?20:me.weapon?12:3;bc({t:'swing',id:me.id});
-   for(const o of players.values())if(o!==me&&!o.dead&&Math.hypot(o.x-me.x,o.y-me.y)<(me.weapon?28:20)){o.hp=Math.max(0,o.hp-dmg);const dd=Math.hypot(o.x-me.x,o.y-me.y)||1,kx=(o.x-me.x)/dd*6,ky=(o.y-me.y)/dd*6;if(!solid(o.x+kx,o.y+ky)&&o.seat<0){o.x+=kx;o.y+=ky}else{}bc({t:'hit',id:o.id,by:me.id,dmg,kx:o.seat<0?kx:0,ky:o.seat<0?ky:0});
+  else if(m.t=='atk'){if(now-last.atk<500)return;last.atk=now;const dmg=me.weapon=='axe'?20:me.weapon?12:3;const ad=[0,1,2,3].includes(m.dir)?m.dir:me.dir;me.dir=ad;const fx=[0,0,-1,1][ad],fy=[1,-1,0,0][ad];bc({t:'swing',id:me.id,dir:ad});
+   for(const o of players.values())if(o!==me&&!o.dead&&Math.hypot(o.x-me.x,o.y-me.y)<(me.weapon?28:20)&&((o.x-me.x)*fx+(o.y-me.y)*fy)>=-4){o.hp=Math.max(0,o.hp-dmg);const dd=Math.hypot(o.x-me.x,o.y-me.y)||1,kx=(o.x-me.x)/dd*6,ky=(o.y-me.y)/dd*6;if(!solid(o.x+kx,o.y+ky)&&o.seat<0){o.x+=kx;o.y+=ky}else{}bc({t:'hit',id:o.id,by:me.id,dmg,kx:o.seat<0?kx:0,ky:o.seat<0?ky:0});
     if(o.hp<=0){o.dead=true;o.deadAt=now;if(o.seat>=0){seats[o.seat].occ=0;o.seat=-1}o.act='';bc({t:'die',id:o.id});bc({t:'sys',text:`${o.name} 님이 ${me.name} 님에게 쓰러졌어요 💀`});for(const c of wss.clients)if(c.pid==o.id){c.send(JSON.stringify({t:'dead',by:me.name}));setTimeout(()=>c.close(),2000)}}}}
  });
  Object.defineProperty(ws,'pid',{get:()=>me&&me.id});
