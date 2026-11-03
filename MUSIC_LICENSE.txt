@@ -1,0 +1,6 @@
+Background music: "Lofi again"
+Artist: omfgdude (OMF-Games)
+Source: https://opengameart.org/content/lofi-again  (file: lofiagain.ogg)
+License: CC0 1.0 Universal (Public Domain Dedication) - commercial use allowed, no attribution required.
+Credit (optional, shown via the small ⓘ link in the music control): "Lofi again" by omfgdude, CC0.
+Shipped as public/assets/bgm.ogg (96 kbps Vorbis) and public/assets/bgm.mp3 (112 kbps), re-encoded from the original.

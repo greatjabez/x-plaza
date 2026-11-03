@@ -12,7 +12,9 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const EMO=['👋','😂','❤️','😮','😡','🎉'];
 const srv=http.createServer((q,s)=>{
  const f=path.join(__dirname,'public',q.url=='/'?'index.html':path.normalize(q.url).replace(/^(\.\.[\/\\])+/,''));
- fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':f.endsWith('.html')?'text/html; charset=utf-8':f.endsWith('.png')?'image/png':f.endsWith('.json')?'application/json':'application/javascript','cache-control':'no-cache'});s.end(d)})});
+ fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);return s.end()}const ext=path.extname(f);const ct={'.html':'text/html; charset=utf-8','.png':'image/png','.json':'application/json','.ogg':'audio/ogg','.mp3':'audio/mpeg','.js':'application/javascript'}[ext]||'application/octet-stream';
+  const r=/bytes=(\d*)-(\d*)/.exec(q.headers.range||'');if(r&&/audio/.test(ct)){const st=r[1]?+r[1]:0,en=r[2]?Math.min(+r[2],d.length-1):d.length-1;s.writeHead(206,{'content-type':ct,'accept-ranges':'bytes','content-range':`bytes ${st}-${en}/${d.length}`,'content-length':en-st+1});return s.end(d.subarray(st,en+1))}
+  s.writeHead(200,{'content-type':ct,'accept-ranges':'bytes','cache-control':/audio|image/.test(ct)?'public, max-age=86400':'no-cache'});s.end(d)})});
 const wss=new WebSocketServer({server:srv});
 const bc=o=>{const m=JSON.stringify(o);wss.clients.forEach(c=>c.readyState==1&&c.send(m))};
 function spawnPos(){for(let i=0;i<500;i++){const a=Math.random()*6.283,r=Math.random()*6*T,x=MAP.spawn.x+Math.cos(a)*r,y=MAP.spawn.y+Math.sin(a)*r*.6;if(!solid(x,y)&&!solid(x-6,y)&&!solid(x+6,y))return{x,y}}return{...MAP.spawn}}
