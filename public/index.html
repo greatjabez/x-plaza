@@ -31,7 +31,7 @@ button:hover{background:#fbe6ec}button:active{transform:translateY(1px);box-shad
 <div style="display:flex;gap:10px;align-items:center"><canvas id="pv" width="32" height="48" style="width:64px;height:96px;background:#e6f3dc;border:2px solid #8a6a4f;border-radius:12px"></canvas>
 <div id="opts" style="flex:1;font-size:13px"></div></div>
 <button id="go" disabled style="width:100%;margin-top:10px">마을 불러오는 중...</button>
-<p style="font-size:12px;opacity:.8">이동 WASD/방향키/터치 · 모션 1앉기 2자기 3눕기 4달리기(Shift 누르기) 5점프(Space) 6인사 7춤 8울기 9화내기 0발사 · 🔫 발사: 마우스 왼쪽 클릭(커서 쪽으로 조준) · X 프로필: Shift+캐릭터 클릭 · 이모지 Z X C V B N · Enter 채팅 · 의자 옆에서 1 또는 클릭하면 앉아요 · 캐릭터 클릭 시 프로필</p></div></div>
+<p style="font-size:12px;opacity:.8">이동 WASD/방향키/터치 · 모션 1앉기 2자기 3눕기 4달리기(Shift 누르기) 5점프(Space) 6인사 7춤 8울기 9화내기 0발사 · 🔫 발사: 마우스 왼쪽 클릭(커서 쪽으로 조준) · X 프로필: 캐릭터 오른쪽 클릭 → 프로필 방문하기 · 이모지 Z X C V B N · Enter 채팅 · 의자 옆에서 1 또는 클릭하면 앉아요</p></div></div>
 <div id="died" class="ov" style="display:none"><div class="card" style="text-align:center"><h1>💀 쓰러졌어요</h1><p id="dby"></p><button onclick="location.reload()">다시 접속하기</button></div></div>
 <script src="mapgen.js"></script><script src="render.js"></script><script src="render6.js"></script>
 <script>
@@ -209,17 +209,19 @@ addEventListener('keydown',e=>{if(e.isComposing||e.keyCode==229)return;if(docume
  const NK={'1':()=>doAct('sit'),'2':()=>doAct('sleep'),'3':()=>doAct('lie'),'4':()=>toggleRun(),'5':()=>doAct('jump'),'6':()=>send({t:'wave'}),'7':()=>doAct('dance'),'8':()=>doAct('cry'),'9':()=>doAct('angry'),'0':()=>attack()};
  if(!e.repeat&&NK[e.key])NK[e.key]();if(e.code=='Space'){if(!e.repeat)doAct('jump');e.preventDefault()}if(!['w','a','s','d','shift'].includes(K)&&!K.startsWith('arrow'))return;keys[e.key.toLowerCase()]=1;target=null});
 addEventListener('keyup',e=>{if(document.activeElement&&document.activeElement.tagName=='INPUT')return;keys[e.key.toLowerCase()]=0});addEventListener('blur',()=>{for(const k in keys)keys[k]=0});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
 cv.addEventListener('pointerdown',e=>{if(!me)return;$('prof').style.display='none';const wx=e.clientX/S+cam.x,wy=e.clientY/S+cam.y;
- if(e.pointerType!='mouse'||e.shiftKey)for(const p of Object.values(players))if(p.id!=myId&&Math.abs(wx-p.rx)<8&&wy>p.ry-40&&wy<p.ry+2){showProf(p,e.clientX,e.clientY);return}{const so=M.objects.find(o=>o.k=='statue');if(so&&wx>so.x*M.T-4&&wx<(so.x+so.w)*M.T+4&&wy>(so.y+2)*M.T-80&&wy<(so.y+2)*M.T){plaqueUntil=Date.now()+4000;return}}const st=(M.seats||[]).find(s=>Math.abs(s.x-wx)<9&&Math.abs(s.y-4-wy)<10);if(st&&Math.hypot(st.x-me.rx,st.y-me.ry)<48){send({t:'act',a:'sit',sx:st.x,sy:st.y});return}if(e.pointerType=='mouse'){if(e.button==0&&!dead&&!e.shiftKey){fire(Math.atan2(wy-(me.ry-17),wx-me.rx))}return}target={x:wx,y:wy}});
+ if(e.pointerType=='mouse'&&e.button==2){for(const p of Object.values(players))if(p.id!=myId&&Math.abs(wx-p.rx)<10&&wy>p.ry-42&&wy<p.ry+4){showProf(p,e.clientX,e.clientY);return}return}
+ if(e.pointerType!='mouse')for(const p of Object.values(players))if(p.id!=myId&&Math.abs(wx-p.rx)<8&&wy>p.ry-40&&wy<p.ry+2){showProf(p,e.clientX,e.clientY);return}{const so=M.objects.find(o=>o.k=='statue');if(so&&wx>so.x*M.T-4&&wx<(so.x+so.w)*M.T+4&&wy>(so.y+2)*M.T-80&&wy<(so.y+2)*M.T){plaqueUntil=Date.now()+4000;return}}const st=(M.seats||[]).find(s=>Math.abs(s.x-wx)<9&&Math.abs(s.y-4-wy)<10);if(st&&Math.hypot(st.x-me.rx,st.y-me.ry)<48){send({t:'act',a:'sit',sx:st.x,sy:st.y});return}if(e.pointerType=='mouse'){if(e.button==0&&!dead){fire(Math.atan2(wy-(me.ry-17),wx-me.rx))}return}target={x:wx,y:wy}});
 let lastFire=0;function fire(a){if(!me||dead)return;const now=Date.now();if(now-lastFire<350)return;lastFire=now;if(a==null)a=[Math.PI/2,-Math.PI/2,Math.PI,0][me.dir|0];me.aim=a;me.dir=dirOf(a);send({t:'atk',a})}
 function attack(){fire(null)}
 function dirOf(a){const c=Math.cos(a),s=Math.sin(a);return Math.abs(c)>Math.abs(s)?(c>0?3:2):(s>0?0:1)}
 let mouseAt=0;cv.addEventListener('pointermove',e=>{if(e.pointerType!='mouse'||!me)return;const wx=e.clientX/S+cam.x,wy=e.clientY/S+cam.y;me.aim=Math.atan2(wy-(me.ry-17),wx-me.rx);mouseAt=Date.now()});
 function doAct(a){if(a=='sit'){const s=nearSeat();if(s){send({t:'act',a:'sit',sx:s.x,sy:s.y});return}}send({t:'act',a})}
 function nearSeat(){if(!me||!M)return null;let b=null,bd=24;for(const s of M.seats){const d=Math.hypot(s.x-me.rx,s.y-me.ry);if(d<bd&&!Object.values(players).some(p=>p.act=='seat'&&p!==me&&Math.hypot(p.x-s.x,p.y-s.y)<2)){bd=d;b=s}}return b}
-function showProf(p,x,y){const d=$('prof');d.innerHTML='';const n=document.createElement('div');n.style.cssText='font-weight:bold;font-size:16px;margin-bottom:6px';n.textContent=dec(p.name);d.appendChild(n);
+function showProf(p,x,y){const d=$('prof');d.innerHTML='';d.style.background='#fff8fb';d.style.borderRadius='16px';const n=document.createElement('div');n.style.cssText='font-weight:bold;font-size:16px;margin-bottom:6px';n.textContent=dec(p.name);d.appendChild(n);
  const hp=document.createElement('div');hp.textContent='HP '+p.hp+(p.weapon?' · ⚔️':'');hp.style.fontSize='12px';d.appendChild(hp);
- if(p.handle){const b=document.createElement('button');b.textContent='𝕏 @'+p.handle;b.style.cssText='background:#000;border-color:#444;margin-top:8px;width:100%';
+ if(p.handle){const b=document.createElement('button');b.id='visitProf';b.textContent='🏡 프로필 방문하기 (@'+p.handle+')';b.style.cssText='background:#fbe3ec;color:#6a4a5a;border:2px solid #f3b8cc;border-radius:12px;margin-top:8px;width:100%;font-size:13px';
   b.onclick=()=>window.open('https://x.com/'+encodeURIComponent(p.handle),'_blank','noopener,noreferrer');d.appendChild(b)}
  else{const s=document.createElement('div');s.style.cssText='font-size:12px;opacity:.7;margin-top:6px';s.textContent='X 계정 없음';d.appendChild(s)}
  d.style.left=Math.min(x,innerWidth-210)+'px';d.style.top=Math.min(y,innerHeight-120)+'px';d.style.display='block'}
