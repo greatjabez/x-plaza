@@ -39,7 +39,13 @@ const seat=(x,y,dir,kind)=>{seats.push({x:Math.round(x*T),y:Math.round(y*T),dir,
 // centerpiece fountain + bench ring + flower ring
 add('fountain',56,39,8,6);
 for(let i=0;i<8;i++){const an=i/8*Math.PI*2+Math.PI/8,x=60+Math.cos(an)*7.2,y=42+Math.sin(an)*5.6;const dir=Math.abs(Math.cos(an))>.7?(Math.cos(an)>0?2:3):(Math.sin(an)>0?1:0);seat(x,y,dir,dir>=2?'benchv':'bench')}
-add('statue',58,33,5,2);add('well',70,33,2,2);[[53,36],[66,36],[53,48],[66,48]].forEach(([x,y])=>add('plamp',x,y,1,1));
+// raised shrine platform (tiles 56..64 x 26..31), stairs x59..61 rows 32..33
+const shrine={x:56,y:26,w:9,h:6,sx:59,sw:3,sh:2,elev:16};for(let j=shrine.y;j<shrine.y+shrine.h+shrine.sh;j++)for(let i=shrine.x;i<shrine.x+shrine.w;i++)resv[I(i,j)]=1;
+for(let i=shrine.x;i<shrine.x+shrine.w;i++){solid[I(i,shrine.y)]=1;if(i<shrine.sx||i>=shrine.sx+shrine.sw)solid[I(i,shrine.y+shrine.h-1)]=1}
+for(let j=shrine.y;j<shrine.y+shrine.h;j++){solid[I(shrine.x,j)]=1;solid[I(shrine.x+shrine.w-1,j)]=1}
+for(let j=shrine.y+shrine.h;j<shrine.y+shrine.h+shrine.sh;j++){solid[I(shrine.sx-1,j)]=1;solid[I(shrine.sx+shrine.sw,j)]=1}
+[[57,27],[63,27]].forEach(([x,y])=>solid[I(x,y)]=1);
+add('statue',58,27,5,2,0,0);for(let i=59;i<62;i++)for(let j=27;j<29;j++)solid[I(i,j)]=1;add('well',70,33,2,2);[[53,36],[66,36],[53,48],[66,48]].forEach(([x,y])=>add('plamp',x,y,1,1));
 for(let i=0;i<12;i++){const an=i/12*Math.PI*2,x=Math.floor(60+Math.cos(an)*10.5),y=Math.floor(42+Math.sin(an)*8);if(y<38&&x>56&&x<64)continue;if(i%3!=0)add('pot',x,y,1,1,i)}
 // parks with hedges
 const parks=[{cx:30,cy:29,r:6},{cx:90,cy:29,r:6},{cx:45,cy:74.5,r:4.6},{cx:79,cy:74.5,r:4.6}];
@@ -87,5 +93,5 @@ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=I(x,y);if(resv[i])continue;co
  else if(e<5.5?R()<.25:(!near&&R()<.04))objects.push({k:'bush',x,y,w:1,h:1,v:Math.floor(R()*4)});else if(!near&&e>=5.5&&R()<.02)objects.push({k:'flowerbed',x,y,w:2,h:1,v:Math.floor(R()*50),flat:1,wild:1})}
 // ensure trees don't sit on map edge holes: border solid
 for(let x=0;x<MW;x++){solid[I(x,0)]=1;solid[I(x,MH-1)]=1}for(let y=0;y<MH;y++){solid[I(0,y)]=1;solid[I(MW-1,y)]=1}
-return {T,MW,MH,ground:Array.from(ground),solid:Array.from(solid),paths,river,plaza,parks,bridges,objects,seats:seats.map(s=>({x:s.x,y:s.y,dir:s.dir,kind:s.kind})),spawn:{x:60*T,y:49*T}}}
+return {T,MW,MH,shrine,ground:Array.from(ground),solid:Array.from(solid),paths,river,plaza,parks,bridges,objects,seats:seats.map(s=>({x:s.x,y:s.y,dir:s.dir,kind:s.kind})),spawn:{x:60*T,y:49*T}}}
 if(typeof module!='undefined')module.exports=MapGen;else G.MapGen=MapGen})(this);

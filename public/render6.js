@@ -61,7 +61,7 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
    case 'bush':put(spr(o.v%2?'fbush':'topiary',20+(o.v%3)*3),X+8,Y+15,{k:'bush'});break;
    case 'fountain':put(spr('fountain',o.w*T+10,true),X+o.w*T/2,Y+o.h*T+4,{k:'fountain'});break;
    case 'pfountain':put(spr('fountain',o.w*T+6,true),X+o.w*T/2,Y+o.h*T+2,{k:'fountain'});break;
-   case 'statue':statue={x:X+o.w*T/2,base:Y+o.h*T};break;
+   case 'statue':statue={x:X+o.w*T/2,base:Y+o.h*T,lift:M.shrine?M.shrine.elev:0};break;
    case 'well':put(spr('well',o.w*T+8,true),X+o.w*T/2,Y+o.h*T+2,{k:'well'});break;
    case 'plamp':case 'lamp':{const s=spr('lantern',o.k=='plamp'?40:34,false,(o.x+o.y)%2==0);put(s,X+8,Y+14,{k:'lamp'});anims.push({k:'glow',x:X+8+((o.x+o.y)%2==0?-1:1)*s.w*.28,y:Y+14-s.h*.62});break}
    case 'bench':put(spr('bench_f',30,true),X,Y+(o.v==1?3:o.v==0?-1:1),{k:'bench',low:true});break;
@@ -90,6 +90,26 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
    for(let k=1;k<N;k++){const p=P(k/N);g.fillStyle=COL[k%COL.length];g.beginPath();g.moveTo(p[0]-3,p[1]);g.lineTo(p[0]+3,p[1]);g.lineTo(p[0],p[1]+6);g.fill()}
    objs.push({img:c,x:x0,y:y0,w:c.width,h:c.height,base:Math.max(a[1],b[1])+36+(i==0&&j==1?-30:0),k:'bunting',low:false})})}
  objs.sort((a,b)=>a.base-b.base);
+ // raised statue shrine (decal on ground; top surface lifted by elev px)
+ if(M.shrine){const q=M.shrine,e=q.elev,X0=q.x*T,Y0=q.y*T,Wp=q.w*T,Hp=q.h*T,SX=q.sx*T,SW=q.sw*T,SY=Y0+Hp-e,SH=q.sh*T+e;gg.save();
+  gg.fillStyle='rgba(120,90,80,.18)';gg.beginPath();gg.roundRect(X0+4,Y0-e+6,Wp,Hp+2,8);gg.fill();
+  // front wall + side walls
+  gg.fillStyle='#e9a9ab';gg.beginPath();gg.roundRect(X0,Y0-e+4,Wp,Hp+e-4,7);gg.fill();
+  gg.fillStyle='#d99d9e';gg.fillRect(X0+2,Y0+Hp-4,Wp-4,4);
+  for(let r=0;r<3;r++){gg.fillStyle='rgba(180,105,112,.5)';gg.fillRect(X0+2,SY+r*5.3,Wp-4,1);for(let x=X0+(r%2?6:0)+3;x<X0+Wp-2;x+=12)gg.fillRect(x,SY+r*5.3,1,5.3)}gg.fillStyle='rgba(255,230,230,.35)';gg.fillRect(X0+2,SY+1,Wp-4,1);
+  // top surface
+  gg.fillStyle='#fdf3ec';gg.beginPath();gg.roundRect(X0,Y0-e,Wp,Hp,7);gg.fill();
+  gg.fillStyle='#f6dcd4';gg.beginPath();gg.roundRect(X0+5,Y0-e+5,Wp-10,Hp-10,5);gg.fill();
+  gg.strokeStyle='rgba(225,180,170,.55)';gg.lineWidth=1;for(let x=X0+5+16;x<X0+Wp-5;x+=16){gg.beginPath();gg.moveTo(x+.5,Y0-e+5);gg.lineTo(x+.5,Y0-e+Hp-5);gg.stroke()}for(let y=Y0-e+5+16;y<Y0-e+Hp-5;y+=16){gg.beginPath();gg.moveTo(X0+5,y+.5);gg.lineTo(X0+Wp-5,y+.5);gg.stroke()}
+  gg.fillStyle='#fff8f2';gg.fillRect(X0+4,Y0-e+1,Wp-8,2);
+  // stairs (3 steps down to ground)
+  const n=3,st=SH/n;for(let i=0;i<n;i++){const y=SY+i*st;gg.fillStyle='#f9ece2';gg.fillRect(SX,y,SW,st);gg.fillStyle='#e9b9b4';gg.fillRect(SX,y+st-4,SW,4);gg.fillStyle='#fffaf5';gg.fillRect(SX,y,SW,1.5)}
+  [SX-T,SX+SW].forEach(x=>{gg.fillStyle='#e7b3b0';gg.beginPath();gg.roundRect(x+3,SY,10,SH,3);gg.fill();gg.fillStyle='#fbefe6';gg.beginPath();gg.roundRect(x+3,SY-3,10,8,3);gg.fill()});
+  // front corner pillars
+  [X0+3,X0+Wp-15].forEach(x=>{const y=Y0+Hp-e-18;gg.fillStyle='rgba(150,100,100,.2)';gg.fillRect(x+3,y+16,12,3);gg.fillStyle='#ecc6c2';gg.fillRect(x+1,y+4,10,13);gg.fillStyle='#fdf1ec';gg.fillRect(x+2,y+4,4,13);gg.fillStyle='#fff8f3';gg.beginPath();gg.roundRect(x-1,y,14,5,2);gg.fill();gg.fillStyle='#e7aeb0';gg.beginPath();gg.roundRect(x-1,y+15,14,4,1.5);gg.fill()});
+  // back corner tulip planters
+  [X0+T+2,X0+Wp-2*T-2].forEach(x=>{const y=Y0-e+T-4;gg.fillStyle='#d9a98a';gg.beginPath();gg.roundRect(x,y+6,14,9,2);gg.fill();gg.fillStyle='#ecc2a4';gg.fillRect(x,y+6,14,2);const f=spr('fl_tulip',16);gg.drawImage(f.c,x-1,y-f.h+10)});
+  gg.restore()}
  // soft shadows
  gg.save();objs.forEach(o=>{if(o.k=='bunting')return;const r=o.k=='tree'?o.w*.36:o.w*.38;gg.fillStyle=o.k=='tree'?'rgba(70,100,60,.22)':'rgba(70,100,60,.16)';gg.beginPath();gg.ellipse(o.x+o.w/2+2,o.base-1,r,o.k=='tree'?6:3,0,0,7);gg.fill()});gg.restore();
  const[wc,wg]=C(W,Hh);wg.drawImage(gc,0,0);objs.forEach(o=>wg.drawImage(o.img,o.x,o.y));
