@@ -78,9 +78,17 @@ parks.forEach((p,pi)=>{const ga=Math.atan2(plaza.cy-p.cy,plaza.cx-p.cx);p.hedge=
  const fx=Math.floor(p.cx)-1,fy=Math.floor(p.cy)-1;objects.push({k:'flowerbed',x:fx,y:fy+1,w:3,h:1,v:pi+7,flat:1});
  seat(p.cx,p.cy-2.4,0,'bench');seat(p.cx,p.cy+3.2,1,'bench');if(p.r>5){seat(p.cx-3.1,p.cy+.4,3,'benchv');seat(p.cx+3.1,p.cy+.4,2,'benchv')}
  [[-3,-3],[2,-3],[-3,2],[2,2]].forEach(([a,b])=>{if(p.r>5)objects.push({k:'flowerbed',x:Math.floor(p.cx)+a,y:Math.floor(p.cy)+b,w:2,h:1,v:pi+a+b,flat:1})});});
-// campfire clearing
-const cf={x:103,y:34};for(let y=cf.y-4;y<=cf.y+4;y++)for(let x=cf.x-4;x<=cf.x+4;x++)resv[I(x,y)]=1;
-add('campfire',cf.x,cf.y,1,1);seat(cf.x+.5,cf.y-1.6,0,'log');seat(cf.x+.5,cf.y+2.6,1,'log');seat(cf.x-1.6,cf.y+.8,3,'logv');seat(cf.x+2.6,cf.y+.8,2,'logv');
+// campfire clearing (painted decal assets/cf_ground.png 655x459 + light rig assets/cf_lights.png 808x312)
+const cf={cx:1590,cy:620,s:.36,fire:[325,205],B:[[200,105,0],[452,105,0],[186,290,1],[465,290,1]],S:[[105,205,3],[543,148,2],[528,212,2]]};
+cf.ox=cf.cx-cf.fire[0]*cf.s;cf.oy=cf.cy-cf.fire[1]*cf.s;const cP=(u,v)=>[cf.ox+u*cf.s,cf.oy+v*cf.s];
+for(let ty=0;ty<MH;ty++)for(let tx=0;tx<MW;tx++){const dx=(tx*T+8-cf.cx)/(330*cf.s+20),dy=(ty*T+8-cf.cy)/(235*cf.s+44);if(dx*dx+dy*dy<1)resv[I(tx,ty)]=1}
+{const fx=Math.floor(cf.cx/T),fy=Math.floor(cf.cy/T);for(let j=fy-1;j<=fy;j++)for(let i=fx-1;i<=fx+1;i++)solid[I(i,j)]=1}
+cf.B.forEach(([u,v,d])=>{const[x,y]=cP(u,v);[-16,16].forEach(o=>solid[I(Math.floor((x+o)/T),Math.floor(y/T))]=1);seats.push({x:Math.round(x),y:Math.round(y+2),dir:d,kind:'cfseat'})});
+cf.S.forEach(([u,v,d])=>{const[x,y]=cP(u,v);seats.push({x:Math.round(x),y:Math.round(y+2),dir:d,kind:'cfseat'})});
+cf.ls=.29;cf.lx=cf.cx-404*cf.ls;cf.ly=cf.cy-60-170*cf.ls;cf.posts=[[12,300],[255,170],[552,170],[792,300]].map(([u,v])=>[cf.lx+u*cf.ls,cf.ly+v*cf.ls]);
+parks.forEach(p=>{p.hedge=(p.hedge||[]).filter(([x,y])=>{const dx=(x*T+8-cf.cx)/(330*cf.s+16),dy=(y*T+8-cf.cy)/(235*cf.s+16),inn=dx*dx+dy*dy<1;if(inn)solid[I(x,y)]=0;return !inn})});
+cf.lamps=[[cf.cx-112,cf.cy+34],[cf.cx+114,cf.cy+14]];cf.lamps.forEach(([x,y])=>solid[I(Math.floor(x/T),Math.floor((y-3)/T))]=1);
+cf.posts.forEach(([x,y])=>solid[I(Math.floor(x/T),Math.floor((y-3)/T))]=1);
 // seats become objects (non-solid sprites) + reserve their tiles
 seats.forEach(s=>{const tx=Math.floor(s.x/T),ty=Math.floor(s.y/T);if(inb(tx,ty))resv[I(tx,ty)]=1;objects.push({k:s.kind,x:s.x/T,y:s.y/T,w:1,h:1,v:s.dir,seat:1})});
 // houses
@@ -116,5 +124,5 @@ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=I(x,y);if(resv[i])continue;co
  else if(e<5.5?R()<.25:(!near&&R()<.04))objects.push({k:'bush',x,y,w:1,h:1,v:Math.floor(R()*4)});else if(!near&&e>=5.5&&R()<.02)objects.push({k:'flowerbed',x,y,w:2,h:1,v:Math.floor(R()*50),flat:1,wild:1})}
 // ensure trees don't sit on map edge holes: border solid
 for(let x=0;x<MW;x++){solid[I(x,0)]=1;solid[I(x,MH-1)]=1}for(let y=0;y<MH;y++){solid[I(0,y)]=1;solid[I(MW-1,y)]=1}
-return {T,MW,MH,shrine,tiers,TE,launch,pz,tr,hgt:Array.from(hgt),ramps,ground:Array.from(ground),solid:Array.from(solid),paths,river,plaza,parks,bridges,objects,seats:seats.map(s=>({x:s.x,y:s.y,dir:s.dir,kind:s.kind})),spawn:{x:60*T,y:49*T}}}
+return {T,MW,MH,cf,shrine,tiers,TE,launch,pz,tr,hgt:Array.from(hgt),ramps,ground:Array.from(ground),solid:Array.from(solid),paths,river,plaza,parks,bridges,objects,seats:seats.map(s=>({x:s.x,y:s.y,dir:s.dir,kind:s.kind})),spawn:{x:60*T,y:49*T}}}
 if(typeof module!='undefined')module.exports=MapGen;else G.MapGen=MapGen})(this);

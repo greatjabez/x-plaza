@@ -326,6 +326,8 @@ function drawAnims(ctx,B,cam,vw,vh,now){const vis=(x,y,m=40)=>x>cam.x-m&&y>cam.y
     for(let i=0;i<14;i++){const ph=((now/700)+i/14)%1,sx=i%2?-1:1,far=i%4<2?18:30;const xx=X+sx*far*ph,yy=top-14*Math.sin(ph*Math.PI)+(t2+10-top)*ph*ph;ctx.fillRect(xx|0,yy|0,2,2)}
     const rp=(now/1100)%1;ctx.strokeStyle=`rgba(200,235,255,${.7*(1-rp)})`;ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(X,Y+j.cy+2,8+rp*36,4+rp*14,0,0,7);ctx.stroke()}
    else{ctx.fillStyle='rgba(220,245,255,.9)';for(let i=0;i<7;i++){const ph=((now/900)+i/7)%1,ang=i*2.4;const r=ph*9,x=X+Math.cos(ang)*r,y=top+(-Math.sin(ph*Math.PI)*4)+ph*8;ctx.fillRect(x|0,y|0,1,2)}}}
+  if(a.k=='cfire'){const f=.75+.15*Math.sin(now/90)+.1*Math.sin(now/37+1.3),gr=ctx.createRadialGradient(X,Y,2,X,Y,46*f);gr.addColorStop(0,`rgba(255,170,70,${.32*f})`);gr.addColorStop(1,'rgba(255,140,60,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(X,Y,46*f,0,7);ctx.fill();
+   for(let e=0;e<4;e++){const t=((now/1400)+e/4)%1,ex=X+Math.sin(now/300+e*2)*5*t+(e-1.5)*2,ey=Y-6-t*30;ctx.fillStyle=`rgba(255,${180+e*15},90,${.9*(1-t)})`;ctx.fillRect(Math.round(ex),Math.round(ey),2,2)}}
   if(a.k=='glow'){ctx.fillStyle=`rgba(255,230,140,${.12+.05*Math.sin(now/300+a.x)})`;ctx.beginPath();ctx.arc(X,Y,9,0,7);ctx.fill()}
   if(a.k=='fire'){ctx.fillStyle=`rgba(255,180,80,${.14+.04*Math.sin(now/120)})`;ctx.beginPath();ctx.arc(X,Y,26,0,7);ctx.fill();const f=now/90|0;
    for(let i=0;i<7;i++){const h=5+((i*7+f*3)%7);ctx.fillStyle=['#ff7a1a','#ffb02a','#ffe060'][i%3];ctx.fillRect(X-7+i*2,Y+2-h,2,h)}ctx.fillStyle='#fff6c0';ctx.fillRect(X-1,Y-3,2,3);

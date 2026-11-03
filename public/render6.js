@@ -1,6 +1,6 @@
 // v6 storybook pastel renderer: prerenders ground + depth-sorted sprites from generated assets
 (function(G){
-const ASSETS=['tree_pink1','tree_pink2','tree_mint1','tree_mint2','topiary','fbush','fl_tulip','fl_daisy','fl_bluebell','fl_clover','toadstool','lilypad','rock','tuft','arch','well','lantern','bench_f','bench_s','sign','fence','campfire','log','fountain','pbench','tex_grass','tex_dirt','tex_water','hill','rocket','plaza','temple','terrain'];
+const ASSETS=['tree_pink1','tree_pink2','tree_mint1','tree_mint2','topiary','fbush','fl_tulip','fl_daisy','fl_bluebell','fl_clover','toadstool','lilypad','rock','tuft','arch','well','lantern','bench_f','bench_s','sign','fence','campfire','log','fountain','pbench','tex_grass','tex_dirt','tex_water','hill','rocket','plaza','temple','terrain','cf_ground','cf_lights'];
 function load(){return Promise.all(ASSETS.map(n=>new Promise(r=>{const i=new Image();i.onload=()=>r([n,i]);i.onerror=()=>r([n,null]);i.src='assets/'+n+'.png'}))).then(l=>Object.fromEntries(l))}
 function C(w,h){const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';return[c,g]}
 function H(x,y,s){let h=(x*374761393+y*668265263+s*982451653)|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
@@ -70,7 +70,6 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
    case 'benchv':put(spr('bench_s',17,true,o.v==3),X,Y+2,{k:'bench',low:true});break;
    case 'log':put(spr('log',28,true),X,Y+(o.v==1?2:0),{k:'log',low:true});break;
    case 'logv':put(spr('log',28,true,false,true),X,Y+8,{k:'log',low:true});break;
-   case 'campfire':put(spr('campfire',26,true),X+8,Y+14,{k:'campfire',low:true});anims.push({k:'glow',x:X+8,y:Y+6});break;
    case 'rock':put(spr('rock',12+(o.v%2)*3,true),X+8,Y+14,{k:'rock',low:true});break;
    case 'pot':put(spr('toadstool',16),X+8,Y+15,{k:'pot',low:true});break;
    case 'barrel':put(spr('rock',13,true),X+8,Y+14,{k:'rock',low:true});break;
@@ -124,6 +123,12 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
   const f=spr('fountain',150,true);if(f){objs.push({img:f.c,x:Math.round(P.fountain.x-f.w/2),y:Math.round(P.fountain.y-M.TE+30-f.h),w:f.w,h:f.h,base:P.fountain.y+18,k:'fountain',low:false})}
   P.benches.forEach(b=>{const bn=spr('pbench',84,true,b.dir==3);if(bn)objs.push({img:bn.c,x:Math.round(b.x-bn.w/2),y:Math.round(b.y-M.TE+14-bn.h),w:bn.w,h:bn.h,base:b.y+2,k:'bench',low:false})});
   statue={x:P.statue.x,base:P.statue.base,lift:P.statue.lift}}
+ // painted campfire clearing: decal baked into ground, string-light rig depth-sorted
+ if(M.cf&&I.cf_ground){const q=M.cf,g=I.cf_ground;gg.drawImage(g,q.ox,q.oy,g.width*q.s,g.height*q.s);anims.push({k:'cfire',x:q.cx,y:q.cy-4});
+  if(I.cf_lights){const L=I.cf_lights,w=L.width*q.ls,h=L.height*q.ls,[c,g2]=C(w,h);g2.drawImage(L,0,0,w,h);objs.push({img:c,x:Math.round(q.lx),y:Math.round(q.ly),w:c.width,h:c.height,base:q.posts[1][1],k:'lights',low:false});
+   [[46,180],[100,185],[160,130],[225,85],[300,65],[355,80],[445,80],[500,65],[580,65],[630,110],[700,150],[760,175]].forEach(([u,v])=>anims.push({k:'glow',x:q.lx+u*q.ls,y:q.ly+v*q.ls}))}
+  const lnp=spr('lantern',34);if(lnp)q.lamps.forEach(([x,y],i)=>{objs.push({img:lnp.c,x:Math.round(x-lnp.w/2),y:Math.round(y-lnp.h),w:lnp.w,h:lnp.h,base:y,k:'lantern',low:false})});
+  objs.sort((a,b)=>a.base-b.base)}
  // painted launchpad hill (baked into ground layer) + rocket/tower sprite (depth-sorted object)
  if(M.launch&&M.launch.hill&&I.hill){const h=M.launch.hill,L=M.launch;
   gg.save();gg.fillStyle='rgba(80,110,60,.18)';gg.beginPath();gg.ellipse(h.ox+527*h.s+6,h.oy+600*h.s,430*h.s,150*h.s,0,0,7);gg.fill();gg.restore();
@@ -137,7 +142,7 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
   const ln=spr('lantern',34);if(ln)(M.ramps||[]).filter(r=>r.lv==1).forEach(r=>[r.x0-14,r.x1+14].forEach(x=>{const by=r.y1-6;objs.push({img:ln.c,x:Math.round(x-ln.w/2),y:Math.round(by-ln.h),w:ln.w,h:ln.h,base:by,k:'lantern',low:false})}));
   objs.sort((a,b)=>a.base-b.base)}
  // soft shadows
- gg.save();objs.forEach(o=>{if(o.k=='bunting'||o.k=='rocket'||o.k=='tower')return;const r=o.k=='tree'?o.w*.36:o.w*.38;gg.fillStyle=o.k=='tree'?'rgba(70,100,60,.22)':'rgba(70,100,60,.16)';gg.beginPath();gg.ellipse(o.x+o.w/2+2,o.base-1,r,o.k=='tree'?6:3,0,0,7);gg.fill()});gg.restore();
+ gg.save();objs.forEach(o=>{if(o.k=='bunting'||o.k=='lights'||o.k=='rocket'||o.k=='tower')return;const r=o.k=='tree'?o.w*.36:o.w*.38;gg.fillStyle=o.k=='tree'?'rgba(70,100,60,.22)':'rgba(70,100,60,.16)';gg.beginPath();gg.ellipse(o.x+o.w/2+2,o.base-1,r,o.k=='tree'?6:3,0,0,7);gg.fill()});gg.restore();
  const[wc,wg]=C(W,Hh);wg.drawImage(gc,0,0);objs.forEach(o=>wg.drawImage(o.img,o.x,o.y));
  const GS=64,grid={};objs.forEach((o,i)=>{if(o.low)return;for(let gy=Math.floor(o.y/GS);gy<=Math.floor((o.y+o.h)/GS);gy++)for(let gx=Math.floor(o.x/GS);gx<=Math.floor((o.x+o.w)/GS);gx++)(grid[gx+','+gy]=grid[gx+','+gy]||[]).push(i)});
  const sp=[];for(let n=0;n<4000&&sp.length<500;n++){const x=H(n,1,31)*W|0,y=H(n,2,31)*Hh|0;if(W_(x,y)&&W_(x,y-6)&&W_(x,y+6))sp.push([x,y,H(n,3,31)*10])}
