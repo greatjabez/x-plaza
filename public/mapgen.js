@@ -46,17 +46,32 @@ for(let j=shrine.y;j<shrine.y+shrine.h;j++){solid[I(shrine.x,j)]=1;solid[I(shrin
 for(let j=shrine.y+shrine.h;j<shrine.y+shrine.h+shrine.sh;j++){solid[I(shrine.sx-1,j)]=1;solid[I(shrine.sx+shrine.sw,j)]=1}
 [[57,27],[63,27]].forEach(([x,y])=>solid[I(x,y)]=1);
 add('statue',58,27,5,2,0,0);
-// NE rocket launchpad: terraced tiers (lv 1..3). Each tier: perimeter solid except a front stair opening; stairs sit just south of the front edge.
-const TE=14,tiers=[{x:84,y:10,w:23,h:13,lv:1,st:{x:95,w:3,h:2}},{x:87,y:10,w:17,h:9,lv:2,st:{x:89,w:3,h:2}},{x:90,y:10,w:11,h:5,lv:3,st:{x:94,w:3,h:2}}];
-tiers.forEach(t=>{for(let j=t.y-4;j<t.y+t.h+t.st.h;j++)for(let i=t.x;i<t.x+t.w;i++)if(inb(i,j))resv[I(i,j)]=1;
- for(let i=t.x;i<t.x+t.w;i++){solid[I(i,t.y)]=1;if(i<t.st.x||i>=t.st.x+t.st.w)solid[I(i,t.y+t.h-1)]=1}
- for(let j=t.y;j<t.y+t.h;j++){solid[I(t.x,j)]=1;solid[I(t.x+t.w-1,j)]=1}
- for(let j=t.y+t.h;j<t.y+t.h+t.st.h;j++){solid[I(t.st.x-1,j)]=1;solid[I(t.st.x+t.st.w,j)]=1;if(t.lv==1)ground[I(t.st.x+1,j)]=1}});
-const launch={rocket:{x:94,y:11,w:3,h:2},tower:{x:98,y:11,w:2,h:2}};[launch.rocket,launch.tower].forEach(r=>{for(let j=r.y;j<r.y+r.h;j++)for(let i=r.x;i<r.x+r.w;i++)solid[I(i,j)]=1});
+// NE rocket launchpad: painted 3-tier hill (assets/hill.png, 1024x768 display px scaled by hill.s, origin ox,oy).
+// Geometry traced from the painting: tier ellipses (cx,cy,rx,ry in image px) + front cliff height; stairs rects (lv,x0,y0,x1,y1).
+// Logical (collision) position = display position + lv*TE. A tile is level L if its display point (y-L*TE) lies on tier L's top;
+// it is solid if that display point lies inside a higher tier's silhouette (top + cliff). Stairs override with a ramp.
+const TE=14,tiers=[];
+const hill={ox:1262,oy:112,s:.55,iw:1024,ih:768,T:[[527,422,412,138,100],[522,308,300,117,78],[528,178,200,107,58]],
+ S:[[1,205,485,300,605],[1,757,490,855,620],[2,285,360,380,485],[2,668,360,770,490],[3,355,240,445,350],[3,605,240,695,345]],pad:[523,163]};
+const hgt=new Int16Array(N),ramps=[];
+{const h=hill,s=h.s,inT=(L,x,y)=>{const t=h.T[L-1],u=((x-h.ox)/s-t[0])/t[2],v=((y-h.oy)/s-t[1])/t[3];return u*u+v*v<=1},
+ sil=(L,x,y)=>{const c=h.T[L-1][4]*s;for(let d=0;d<=c;d+=3)if(inT(L,x,y-d))return true;return false};
+ h.S.forEach(([l,x0,y0,x1,y1])=>{const w=(x1-x0)*s,X0=h.ox+x0*s+w*.12,X1=h.ox+x1*s-w*.12,xc=(X0+X1)/2;let Y0=h.oy+y0*s+l*TE,Y1=h.oy+y1*s+(l-1)*TE;
+  while(!inT(l,xc,Y0-8-l*TE)&&Y0>0)Y0-=4;while(sil(l,xc,Y1+8-(l-1)*TE))Y1+=4;ramps.push({lv:l,x0:X0,x1:X1,y0:Y0,y1:Y1+6})});
+ const bx0=Math.floor(h.ox/T),bx1=Math.ceil((h.ox+h.iw*s)/T),by0=0,by1=Math.ceil((h.oy+h.ih*s)/T)+1;h.box=[bx0,by0,bx1,by1];
+ for(let ty=by0;ty<by1;ty++)for(let tx=bx0;tx<bx1;tx++){if(!inb(tx,ty))continue;const i=I(tx,ty),x=tx*T+8,y=ty*T+8;
+  if([1,2,3].some(k=>sil(k,x,y)||sil(k,x,y-24)||sil(k,x,y+28)||sil(k,x-20,y+8)||sil(k,x+20,y+8)||inT(k,x,y-k*TE)))resv[i]=1;
+  let L=0;for(let k=3;k>=1;k--)if(inT(k,x,y-k*TE)){L=k;break}hgt[i]=L*TE;
+  for(let k=L+1;k<=3;k++)if([0,-6,6].some(dx=>sil(k,x+dx,y-L*TE))||sil(k,x,y-L*TE+7))solid[i]=1;
+  const r=ramps.find(r=>x>=r.x0&&x<r.x1&&y>=r.y0-2&&y<r.y1+2);if(r){solid[i]=0;hgt[i]=-1}}
+ const ev=i=>{if(hgt[i]>=0)return hgt[i];const x=(i%MW)*T+8,y=Math.floor(i/MW)*T+8,r=ramps.find(r=>x>=r.x0&&x<r.x1&&y>=r.y0-2&&y<r.y1+2);return TE*(r.lv-Math.min(1,Math.max(0,(y-r.y0)/(r.y1-r.y0))))};
+ for(let ty=by0;ty<by1;ty++)for(let tx=bx0;tx<bx1;tx++){const i=I(tx,ty);if(solid[i])continue;for(const[a,b]of[[1,0],[0,1]]){const j=I(tx+a,ty+b);if(!inb(tx+a,ty+b)||solid[j])continue;const d=ev(i)-ev(j);if(Math.abs(d)>9){const lo=d<0?i:j,hi=d<0?j:i;solid[hgt[lo]>=0||hgt[hi]<0?lo:hi]=1}}}}
+const launch={hill,rocket:{x:hill.ox+hill.pad[0]*hill.s,y:hill.oy+hill.pad[1]*hill.s+3*TE}};
+{const rx=Math.floor(launch.rocket.x/T),ry=Math.floor(launch.rocket.y/T);for(let j=ry-1;j<=ry;j++)for(let i=rx-1;i<=rx+1;i++)solid[I(i,j)]=1}
 for(let i=59;i<62;i++)for(let j=27;j<29;j++)solid[I(i,j)]=1;add('well',70,33,2,2);[[53,36],[66,36],[53,48],[66,48]].forEach(([x,y])=>add('plamp',x,y,1,1));
 for(let i=0;i<12;i++){const an=i/12*Math.PI*2,x=Math.floor(60+Math.cos(an)*10.5),y=Math.floor(42+Math.sin(an)*8);if(y<38&&x>56&&x<64)continue;if(i%3!=0)add('pot',x,y,1,1,i)}
 // parks with hedges
-const parks=[{cx:30,cy:29,r:6},{cx:90,cy:29,r:6},{cx:45,cy:74.5,r:4.6},{cx:79,cy:74.5,r:4.6}];
+const parks=[{cx:30,cy:29,r:6},{cx:90,cy:38,r:5.6},{cx:45,cy:74.5,r:4.6},{cx:79,cy:74.5,r:4.6}];
 parks.forEach((p,pi)=>{const ga=Math.atan2(plaza.cy-p.cy,plaza.cx-p.cx);p.hedge=[];
  for(let y=Math.floor(p.cy-p.r-1);y<=p.cy+p.r+1;y++)for(let x=Math.floor(p.cx-p.r-1);x<=p.cx+p.r+1;x++){if(!inb(x,y))continue;const d=Math.hypot(x+.5-p.cx,y+.5-p.cy);if(d>p.r+.6)continue;
   const i=I(x,y);if(ground[i]==1||ground[i]==3)continue;resv[i]=1;
@@ -101,5 +116,5 @@ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=I(x,y);if(resv[i])continue;co
  else if(e<5.5?R()<.25:(!near&&R()<.04))objects.push({k:'bush',x,y,w:1,h:1,v:Math.floor(R()*4)});else if(!near&&e>=5.5&&R()<.02)objects.push({k:'flowerbed',x,y,w:2,h:1,v:Math.floor(R()*50),flat:1,wild:1})}
 // ensure trees don't sit on map edge holes: border solid
 for(let x=0;x<MW;x++){solid[I(x,0)]=1;solid[I(x,MH-1)]=1}for(let y=0;y<MH;y++){solid[I(0,y)]=1;solid[I(MW-1,y)]=1}
-return {T,MW,MH,shrine,tiers,TE,launch,ground:Array.from(ground),solid:Array.from(solid),paths,river,plaza,parks,bridges,objects,seats:seats.map(s=>({x:s.x,y:s.y,dir:s.dir,kind:s.kind})),spawn:{x:60*T,y:49*T}}}
+return {T,MW,MH,shrine,tiers,TE,launch,hgt:Array.from(hgt),ramps,ground:Array.from(ground),solid:Array.from(solid),paths,river,plaza,parks,bridges,objects,seats:seats.map(s=>({x:s.x,y:s.y,dir:s.dir,kind:s.kind})),spawn:{x:60*T,y:49*T}}}
 if(typeof module!='undefined')module.exports=MapGen;else G.MapGen=MapGen})(this);
