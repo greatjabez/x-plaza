@@ -27,13 +27,11 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
  gg.drawImage(masked(pathMask,pat(gg,'tex_dirt',160),1.2),0,0);
  // little grass islands inside plaza ring edge are skipped for calm look
  // river: bank, water
- gg.drawImage(masked(g=>strokeP(g,M.river.pts,M.river.w+1.1),'#c99a76',1),0,0);
- gg.drawImage(masked(g=>strokeP(g,M.river.pts,M.river.w+.55),'#e3bf98',1),0,0);
- gg.drawImage(masked(g=>strokeP(g,M.river.pts,M.river.w),pat(gg,'tex_water',96),1),0,0);
- gg.drawImage(masked(g=>strokeP(g,M.river.pts,M.river.w-1.4),'rgba(120,200,200,.25)',6),0,0);
- if(M.pv){const q=M.pv,el=(g,d)=>{g.beginPath();g.ellipse(q.cx*T,q.cy*T,(q.prx+d)*T,(q.pry+d)*T,0,0,7);g.fill()};
-  gg.drawImage(masked(g=>el(g,.55),'#c99a76',1),0,0);gg.drawImage(masked(g=>el(g,.28),'#e3bf98',1),0,0);gg.drawImage(masked(g=>strokeP(g,M.river.pts,M.river.w),pat(gg,'tex_water',96),1),0,0);gg.drawImage(masked(g=>el(g,0),pat(gg,'tex_water',96),1),0,0);
-  gg.drawImage(masked(g=>el(g,-1.4),'rgba(120,200,200,.25)',6),0,0)}
+ const RW=(g,d)=>{strokeP(g,M.river.pts,M.river.w+d);if(M.pv&&M.pv.wide)M.pv.wide.forEach(c=>{g.beginPath();g.arc(c[0]*T,c[1]*T,Math.max(0,c[2]+d/2)*T,0,7);g.fill()})};
+ gg.drawImage(masked(g=>RW(g,1.1),'#c99a76',1),0,0);
+ gg.drawImage(masked(g=>RW(g,+.55),'#e3bf98',1),0,0);
+ gg.drawImage(masked(g=>RW(g,0),pat(gg,'tex_water',96),1),0,0);
+ gg.drawImage(masked(g=>RW(g,-1.4),'rgba(120,200,200,.25)',6),0,0);
  const W_=(x,y)=>M.ground[Math.floor(y/T)*M.MW+Math.floor(x/T)]==3;
  // lily pads
  for(let n=0,c=0;n<4000&&c<70;n++){const x=H(n,5,41)*W,y=H(n,6,41)*Hh;if(!W_(x,y)||!W_(x+14,y)||!W_(x-14,y)||!W_(x,y+12)||!W_(x,y-12))continue;const s=spr('lilypad',12+H(n,7,1)*8,true,H(n,8,1)<.5);gg.globalAlpha=.95;gg.drawImage(s.c,x-s.w/2,y-s.h/2);gg.globalAlpha=1;c++}
@@ -83,8 +81,7 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
   }});
  // park hedges -> round topiary bushes
  (M.parks||[]).forEach(p=>(p.hedge||[]).forEach(([x,y],i)=>put(spr(i%4==0?'fbush':'topiary',19+H(x,y,3)*4),x*T+8,y*T+15,{k:'bush'})));
- // rose arches on a few radiating paths, signposts at forest-edge forks
- [4,5,6,7].forEach(pi=>{const p=M.paths[pi];if(!p)return;const k=Math.floor(p.pts.length*.42),a=p.pts[k],b=p.pts[k+1]||a;put(spr('arch',p.w*T+14,true),a[0]*T,a[1]*T+8,{k:'arch'})});
+ // signposts at forest-edge forks
  [[12,14,1],[108,14,-1],[25,86,1],[95,86,-1]].forEach(([x,y,s])=>{const s_=spr('sign',26,false,s<0);put(s_,(x+s*2.4)*T,(y+1.6)*T,{k:'sign'})});
  // toadstool clusters near forest edge
  for(let n=0,c=0;n<3000&&c<40;n++){const tx=Math.floor(H(n,31,5)*M.MW),ty=Math.floor(H(n,32,5)*M.MH);const e=Math.min(tx,ty,M.MW-tx,M.MH-ty);if(e<7||e>12||!freeGrass(tx,ty))continue;occ.add(tx+','+ty);put(spr('toadstool',13+H(n,33,5)*5),tx*T+8,ty*T+14,{low:true});c++}

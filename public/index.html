@@ -23,7 +23,7 @@ button:hover{background:#fbe6ec}button:active{transform:translateY(1px);box-shad
 <div id="hud">🌲 엑스광장 · 접속자 <b id="on">0</b>명 · <span id="me"></span></div>
 <div id="chat"><div id="log"></div><input id="ci" maxlength="80" placeholder="Enter로 채팅..."></div>
 <div id="emo"></div>
-<div id="kst" style="position:fixed;left:10px;top:76px;z-index:6;background:rgba(255,248,236,.82);border:2px solid #c9ad8f;border-radius:12px;padding:1px 8px;font-size:11px;color:#7a5a44;pointer-events:none"></div><div id="music"><button id="mbtn" title="음악 켜기/끄기">🎵</button><input id="mvol" type="range" min="0" max="100" title="볼륨"><span id="mmsg"></span><a href="https://opengameart.org/content/lofi-again" target="_blank" rel="noopener" style="font-size:10px;color:#a08a74;text-decoration:none" title="Lofi again — omfgdude (CC0)">ⓘ</a></div>
+<div id="music"><button id="mbtn" title="음악 켜기/끄기">🎵</button><input id="mvol" type="range" min="0" max="100" title="볼륨"><span id="mmsg"></span><a href="https://opengameart.org/content/lofi-again" target="_blank" rel="noopener" style="font-size:10px;color:#a08a74;text-decoration:none" title="Lofi again — omfgdude (CC0)">ⓘ</a></div>
 <button id="dressBtn" style="position:fixed;left:10px;top:86px;z-index:6;display:none;font-size:13px;padding:4px 10px">👗 꾸미기</button>
 <div id="dress" class="card" style="position:fixed;left:10px;top:122px;z-index:9;display:none;width:260px;padding:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>👗 꾸미기</b><button id="dressX" style="padding:0 8px;font-size:12px">닫기</button></div><div style="display:flex;gap:8px;align-items:center"><canvas id="pv2" width="96" height="144" style="width:72px;height:108px;background:#e6f3dc;border:2px solid #8a6a4f;border-radius:12px"></canvas><div id="opts2" style="flex:1"></div></div><div style="font-size:10px;opacity:.6;margin-top:6px">곧 상점 아이템이 추가될 예정이에요 ✨</div></div>
 <div id="prof" class="card" style="width:200px;padding:12px"></div>
@@ -224,7 +224,6 @@ let lastSig='';
 let showMini=innerWidth>=700,plaqueUntil=0;
 function loop(){tick++;update();ctx.fillStyle='#cfe6c0';ctx.fillRect(0,0,cv.width,cv.height);
  if(Math.abs(zoomT-zoom)>.001){zoom+=(zoomT-zoom)*.2;if(Math.abs(zoomT-zoom)<.002)zoom=zoomT;S=S0*zoom}
- if(tick%30==1)$('kst').textContent=DayNight.label();
  if(M&&B){const vw=cv.width/S,vh=cv.height/S;let fx=me?me.rx:M.spawn.x,fy=me?me.ry:M.spawn.y;cam.x=Math.round(Math.max(0,Math.min(B.W-vw,fx-vw/2))*S)/S;cam.y=Math.round(Math.max(0,Math.min(B.H-vh,fy-vh/2))*S)/S;
   for(const p of Object.values(players))if(p.id!=myId){p.rx+=(p.x-p.rx)*.25;p.ry+=(p.y-p.ry)*.25}
   const now=Date.now();ctx.save();ctx.scale(S,S);ctx.drawImage(B.world,cam.x,cam.y,vw+1,vh+1,0,0,vw+1,vh+1);

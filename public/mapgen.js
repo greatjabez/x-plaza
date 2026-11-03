@@ -22,7 +22,7 @@ const paths=[P(3.2,[[60,30],[60,18],[60,10.5]]),P(3.4,[[60,55],[60,72],[60,91]])
  {w:2.4,ring:1,pts:Array.from({length:61},(_,i)=>{const a=(125+i/60*290)*Math.PI/180;return[60+Math.cos(a)*31,41+Math.sin(a)*19.5]})},
  P(2,[[30,45],[30,58],[22,62]]),P(2,[[90,41],[92,56],[100,62]]),P(2,[[40,23],[44,12],[52,8]]),P(2,[[80,23],[76,12],[68,8]])];
 paths.push(P(2.6,[[50.3,53],[44,52.5],[35,49],[25,45.5],[15,43]]));
-paths.push(P(2.6,[[89.6,70],[91,74],[95,86]]));
+paths.push(P(2.6,[[81.8,72.6],[84,77],[90,81.5],[95,86]]));
 // bridges where paths cross the river
 const rY=x=>{for(let i=0;i<river.pts.length-1;i++){const a=river.pts[i],b=river.pts[i+1];if(x>=a[0]&&x<=b[0])return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0])}return 66};
 const bridges=[];paths.forEach(p=>{for(let i=0;i<p.pts.length-1;i++){const a=p.pts[i],b=p.pts[i+1],fa=a[1]-rY(a[0]),fb=b[1]-rY(b[0]);
@@ -31,15 +31,18 @@ const bridges=[];paths.forEach(p=>{for(let i=0;i<p.pts.length-1;i++){const a=p.p
 const pv={cx:89,cy:68.1,s:.2,ic:[370,470],irx:4.1,iry:2.0,prx:8,pry:5,ang:1.054};
 {const k=bridges.findIndex(b=>Math.abs(b.x-pv.cx)<3&&Math.abs(b.y-pv.cy)<3);if(k>=0)bridges.splice(k,1)}
 pv.ox=pv.cx*T-pv.ic[0]*pv.s;pv.oy=pv.cy*T-pv.ic[1]*pv.s;
-pv.br=[{x:pv.cx+Math.cos(pv.ang)*3.9,y:pv.cy+Math.sin(pv.ang)*3.9,ang:pv.ang,len:4.6,wid:2.4},{x:94.5,y:65.2,ang:-0.565,len:6.6,wid:2.4,flip:1}];
+pv.br=[{x:94.5,y:65.2,ang:-0.565,len:6.6,wid:2.4,flip:1},{x:pv.cx-0.845*5.9,y:pv.cy+0.535*5.9,ang:-0.565,len:6.6,wid:2.4,flip:1}];
+// river widened smoothly around the island (same river: union of circles along the centreline, gaussian bulge)
+pv.wide=[];for(let x=pv.cx-14;x<=pv.cx+14;x+=.35){const y=rY(x);pv.wide.push([x,y,river.w/2+3.6*Math.exp(-(((x-pv.cx)/4.6)**2))])}
+const inW=(x,y,d=0)=>pv.wide.some(c=>Math.hypot(x-c[0],y-c[1])<c[2]+d);
 const inEl=(x,y,rx,ry)=>((x-pv.cx)/rx)**2+((y-pv.cy)/ry)**2<1;
 const inPB=(px,py)=>pv.br.some(b=>{const dx=px-b.x,dy=py-b.y,u=dx*Math.cos(b.ang)+dy*Math.sin(b.ang),v=-dx*Math.sin(b.ang)+dy*Math.cos(b.ang);return Math.abs(u)<b.len/2&&Math.abs(v)<b.wid/2});
 const inBridge=(px,py)=>bridges.some(b=>{const dx=px-b.x,dy=py-b.y,u=dx*Math.cos(b.ang)+dy*Math.sin(b.ang),v=-dx*Math.sin(b.ang)+dy*Math.cos(b.ang);return Math.abs(u)<b.len/2&&Math.abs(v)<b.wid/2});
 for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const cx=x+.5,cy=y+.5,i=I(x,y);
  if(inEl(cx,cy,pv.irx,pv.iry)){ground[i]=0;resv[i]=1;const u=(cx*T-pv.ox)/pv.s,v=(cy*T-pv.oy)/pv.s;if((u>300&&u<590&&v>300&&v<470)||(Math.abs(u-205)<40&&v>290&&v<360))solid[i]=1;continue}
- if(inPB(cx,cy)&&inEl(cx,cy,pv.prx+1.5,pv.pry+1.5)){ground[i]=4;resv[i]=1;continue}
- if(inEl(cx,cy,pv.prx,pv.pry)){ground[i]=3;solid[i]=1;resv[i]=1;continue}
- if(inEl(cx,cy,pv.prx+1.3,pv.pry+1.3))resv[i]=1;
+ if(inPB(cx,cy)&&inW(cx,cy,1.5)){ground[i]=4;resv[i]=1;continue}
+ if(inW(cx,cy)){ground[i]=3;solid[i]=1;resv[i]=1;continue}
+ if(inW(cx,cy,1.3))resv[i]=1;
  const dw=dpoly(cx,cy,river.pts);if(dw<river.w/2){ground[i]=inBridge(cx,cy)?4:3;if(ground[i]==3)solid[i]=1;resv[i]=1;continue}
  if(Math.hypot(cx-plaza.cx,cy-plaza.cy)<plaza.r){ground[i]=2;resv[i]=1;continue}
  for(const p of paths)if(dpoly(cx,cy,p.pts)<p.w/2){ground[i]=1;resv[i]=1;break}
@@ -100,6 +103,7 @@ cf.B.forEach(([u,v,d])=>{const[x,y]=cP(u,v);[-16,16].forEach(o=>solid[I(Math.flo
 cf.S.forEach(([u,v,d])=>{const[x,y]=cP(u,v);seats.push({x:Math.round(x),y:Math.round(y+2),dir:d,kind:'cfseat'})});
 cf.ls=.29;cf.lx=cf.cx-404*cf.ls;cf.ly=cf.cy-60-170*cf.ls;cf.posts=[[12,300],[255,170],[552,170],[792,300]].map(([u,v])=>[cf.lx+u*cf.ls,cf.ly+v*cf.ls]);
 parks.forEach(p=>{p.hedge=(p.hedge||[]).filter(([x,y])=>{const dx=(x*T+8-cf.cx)/(330*cf.s+16),dy=(y*T+8-cf.cy)/(235*cf.s+16),inn=dx*dx+dy*dy<1;if(inn)solid[I(x,y)]=0;return !inn})});
+parks.forEach(p=>{p.hedge=p.hedge.filter(([x,y])=>{const b=pv.br[1],ex=b.x-Math.cos(b.ang)*b.len/2,ey=b.y-Math.sin(b.ang)*b.len/2,bad=Math.hypot(x+.5-ex,y+.5-ey)<3.2||Math.hypot(x+.5-b.x,y+.5-b.y)<3.6;if(bad)solid[I(x,y)]=0;return !bad})});
 cf.lamps=[[cf.cx-112,cf.cy+34],[cf.cx+114,cf.cy+14]];cf.lamps.forEach(([x,y])=>solid[I(Math.floor(x/T),Math.floor((y-3)/T))]=1);
 cf.posts.forEach(([x,y])=>solid[I(Math.floor(x/T),Math.floor((y-3)/T))]=1);
 // cozy tree ring around the campfire clearing (keeps path entrances open)
