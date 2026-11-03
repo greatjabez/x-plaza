@@ -136,7 +136,8 @@ function drawCharAt(g,X,Y,p,now){const L=p.look||[0,0,0,0,0],id=p.id||0,act=p.ac
  if(act=='cry'&&dir!=1){g.fillStyle='#7fd0ff';const a=(now/80|0)%6;g.fillRect(X-2,Y-24+a+yo,1,2);g.fillRect(X+4,Y-24+((a+3)%6)+yo,1,2)}
  if(act=='angry'){g.fillStyle='#ff4a4a';const a=(now/200|0)%2;g.fillRect(X+5,Y-42-a,2,1);g.fillRect(X+8,Y-42-a,2,1);g.fillRect(X+6,Y-44-a,1,2);g.fillRect(X+9,Y-44-a,1,2);g.fillStyle='rgba(255,80,80,.25)';g.fillRect(X-10+xo,Y-38,20,16)}
  return {yo,rot,sit}}
-function elev(p){const q=M&&M.shrine;if(!q||p.lie)return 0;const T=M.T,tx=p.rx/T,ty=p.ry/T;if(tx>=q.x&&tx<q.x+q.w&&ty>=q.y&&ty<q.y+q.h)return q.elev;if(tx>=q.sx&&tx<q.sx+q.sw&&ty>=q.y+q.h&&ty<q.y+q.h+q.sh)return Math.round(q.elev*(1-(ty-q.y-q.h)/q.sh));return 0}
+function elev(p){if(!M||p.lie)return 0;const T=M.T,tx=p.rx/T,ty=p.ry/T,q=M.shrine;if(q){if(tx>=q.x&&tx<q.x+q.w&&ty>=q.y&&ty<q.y+q.h)return q.elev;if(tx>=q.sx&&tx<q.sx+q.sw&&ty>=q.y+q.h&&ty<q.y+q.h+q.sh)return Math.round(q.elev*(1-(ty-q.y-q.h)/q.sh))}
+ let e=0;for(const t of M.tiers||[]){if(tx>=t.x&&tx<t.x+t.w&&ty>=t.y&&ty<t.y+t.h)e=Math.max(e,t.lv*M.TE);else{const s=t.st;if(tx>=s.x&&tx<s.x+s.w&&ty>=t.y+t.h&&ty<t.y+t.h+s.h)e=Math.max(e,Math.round(M.TE*(t.lv-(ty-t.y-t.h)/s.h)))}}return e}
 function drawChar(p){const now=Date.now(),X=Math.round(p.rx-cam.x),Y=Math.round(p.ry-elev(p)-cam.y);const r=drawCharAt(ctx,X,Y,p,now);
  if(p.dieAt)return;const hy=r.rot?Y-22:r.sit?Y-40:Y-47;ctx.fillStyle='#5f4b3a';ctx.fillRect(X-9,hy,18,3);ctx.fillStyle='#fff3e0';ctx.fillRect(X-8,hy+1,16,1);ctx.fillStyle=p.hp>50?'#8fd08a':p.hp>25?'#f4d28a':'#f09a9a';ctx.fillRect(X-8,hy+1,16*p.hp/100,1)}
 const pvs=[$('pv').getContext('2d'),$('pv2').getContext('2d')];setInterval(()=>{const n=Date.now(),ph=(n/2000|0)%4;pvs.forEach(pv=>{if(!pv.canvas.offsetParent)return;pv.setTransform(1,0,0,1,0,0);pv.clearRect(0,0,96,144);pv.setTransform(3,0,0,3,0,0);drawCharAt(pv,16,45,{look,dir:[0,2,1,0][ph],id:1,moving:ph==1||ph==2,waveUntil:ph==3?n+100:0},n)})},90);
@@ -222,7 +223,7 @@ function loop(){tick++;update();ctx.fillStyle='#cfe6c0';ctx.fillRect(0,0,cv.widt
   const now=Date.now();ctx.save();ctx.scale(S,S);ctx.drawImage(B.world,cam.x,cam.y,Math.ceil(vw)+1,Math.ceil(vh)+1,0,0,Math.ceil(vw)+1,Math.ceil(vh)+1);
   Render.drawAnims(ctx,B,cam,vw,vh,now);drawWeapons();
   const ps=Object.values(players).filter(p=>p.rx>cam.x-40&&p.rx<cam.x+vw+40&&p.ry>cam.y-40&&p.ry<cam.y+vh+60).sort((a,b)=>a.ry-b.ry);
-  let stDone=!B.statue;for(const p of ps){if(!stDone&&p.ry>B.statue.base){drawStatue(B);stDone=true}drawChar(p);for(const o of Render.occluders(B,p.rx-16,p.ry-34,p.rx+16,p.ry+4,p.ry+(p.act=='seat'?2:0)))ctx.drawImage(o.img,o.x-cam.x,o.y-cam.y)}
+  let stDone=!B.statue;for(const p of ps){if(!stDone&&p.ry>B.statue.base){drawStatue(B);stDone=true}drawChar(p);for(const o of Render.occluders(B,p.rx-16,p.ry-elev(p)-34,p.rx+16,p.ry-elev(p)+4,p.ry+(p.act=='seat'?2:0)))ctx.drawImage(o.img,o.x-cam.x,o.y-cam.y)}
   if(!stDone)drawStatue(B);
   drawBullets();
   const ns=nearSeat();if(ns&&me&&me.act!='seat'&&!dead){ctx.fillStyle='#fff8ec';ctx.fillRect(ns.x-cam.x-14,ns.y-cam.y-26,28,9);ctx.strokeStyle='#8a6a4f';ctx.lineWidth=.6;ctx.strokeRect(ns.x-cam.x-14,ns.y-cam.y-26,28,9);ctx.fillStyle='#5f4b3a';ctx.font='7px sans-serif';ctx.textAlign='center';ctx.fillText('앉기 (1)',ns.x-cam.x,ns.y-cam.y-19)}

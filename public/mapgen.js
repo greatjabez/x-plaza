@@ -45,7 +45,15 @@ for(let i=shrine.x;i<shrine.x+shrine.w;i++){solid[I(i,shrine.y)]=1;if(i<shrine.s
 for(let j=shrine.y;j<shrine.y+shrine.h;j++){solid[I(shrine.x,j)]=1;solid[I(shrine.x+shrine.w-1,j)]=1}
 for(let j=shrine.y+shrine.h;j<shrine.y+shrine.h+shrine.sh;j++){solid[I(shrine.sx-1,j)]=1;solid[I(shrine.sx+shrine.sw,j)]=1}
 [[57,27],[63,27]].forEach(([x,y])=>solid[I(x,y)]=1);
-add('statue',58,27,5,2,0,0);for(let i=59;i<62;i++)for(let j=27;j<29;j++)solid[I(i,j)]=1;add('well',70,33,2,2);[[53,36],[66,36],[53,48],[66,48]].forEach(([x,y])=>add('plamp',x,y,1,1));
+add('statue',58,27,5,2,0,0);
+// NE rocket launchpad: terraced tiers (lv 1..3). Each tier: perimeter solid except a front stair opening; stairs sit just south of the front edge.
+const TE=14,tiers=[{x:84,y:10,w:23,h:13,lv:1,st:{x:95,w:3,h:2}},{x:87,y:10,w:17,h:9,lv:2,st:{x:89,w:3,h:2}},{x:90,y:10,w:11,h:5,lv:3,st:{x:94,w:3,h:2}}];
+tiers.forEach(t=>{for(let j=t.y-4;j<t.y+t.h+t.st.h;j++)for(let i=t.x;i<t.x+t.w;i++)if(inb(i,j))resv[I(i,j)]=1;
+ for(let i=t.x;i<t.x+t.w;i++){solid[I(i,t.y)]=1;if(i<t.st.x||i>=t.st.x+t.st.w)solid[I(i,t.y+t.h-1)]=1}
+ for(let j=t.y;j<t.y+t.h;j++){solid[I(t.x,j)]=1;solid[I(t.x+t.w-1,j)]=1}
+ for(let j=t.y+t.h;j<t.y+t.h+t.st.h;j++){solid[I(t.st.x-1,j)]=1;solid[I(t.st.x+t.st.w,j)]=1;if(t.lv==1)ground[I(t.st.x+1,j)]=1}});
+const launch={rocket:{x:94,y:11,w:3,h:2},tower:{x:98,y:11,w:2,h:2}};[launch.rocket,launch.tower].forEach(r=>{for(let j=r.y;j<r.y+r.h;j++)for(let i=r.x;i<r.x+r.w;i++)solid[I(i,j)]=1});
+for(let i=59;i<62;i++)for(let j=27;j<29;j++)solid[I(i,j)]=1;add('well',70,33,2,2);[[53,36],[66,36],[53,48],[66,48]].forEach(([x,y])=>add('plamp',x,y,1,1));
 for(let i=0;i<12;i++){const an=i/12*Math.PI*2,x=Math.floor(60+Math.cos(an)*10.5),y=Math.floor(42+Math.sin(an)*8);if(y<38&&x>56&&x<64)continue;if(i%3!=0)add('pot',x,y,1,1,i)}
 // parks with hedges
 const parks=[{cx:30,cy:29,r:6},{cx:90,cy:29,r:6},{cx:45,cy:74.5,r:4.6},{cx:79,cy:74.5,r:4.6}];
@@ -93,5 +101,5 @@ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=I(x,y);if(resv[i])continue;co
  else if(e<5.5?R()<.25:(!near&&R()<.04))objects.push({k:'bush',x,y,w:1,h:1,v:Math.floor(R()*4)});else if(!near&&e>=5.5&&R()<.02)objects.push({k:'flowerbed',x,y,w:2,h:1,v:Math.floor(R()*50),flat:1,wild:1})}
 // ensure trees don't sit on map edge holes: border solid
 for(let x=0;x<MW;x++){solid[I(x,0)]=1;solid[I(x,MH-1)]=1}for(let y=0;y<MH;y++){solid[I(0,y)]=1;solid[I(MW-1,y)]=1}
-return {T,MW,MH,shrine,ground:Array.from(ground),solid:Array.from(solid),paths,river,plaza,parks,bridges,objects,seats:seats.map(s=>({x:s.x,y:s.y,dir:s.dir,kind:s.kind})),spawn:{x:60*T,y:49*T}}}
+return {T,MW,MH,shrine,tiers,TE,launch,ground:Array.from(ground),solid:Array.from(solid),paths,river,plaza,parks,bridges,objects,seats:seats.map(s=>({x:s.x,y:s.y,dir:s.dir,kind:s.kind})),spawn:{x:60*T,y:49*T}}}
 if(typeof module!='undefined')module.exports=MapGen;else G.MapGen=MapGen})(this);
