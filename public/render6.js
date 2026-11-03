@@ -1,6 +1,6 @@
 // v6 storybook pastel renderer: prerenders ground + depth-sorted sprites from generated assets
 (function(G){
-const ASSETS=['tree_pink1','tree_pink2','tree_mint1','tree_mint2','topiary','fbush','fl_tulip','fl_daisy','fl_bluebell','fl_clover','toadstool','lilypad','rock','tuft','arch','well','lantern','bench_f','bench_s','sign','fence','campfire','log','fountain','tex_grass','tex_dirt','tex_water','hill','rocket','plaza','temple','terrain'];
+const ASSETS=['tree_pink1','tree_pink2','tree_mint1','tree_mint2','topiary','fbush','fl_tulip','fl_daisy','fl_bluebell','fl_clover','toadstool','lilypad','rock','tuft','arch','well','lantern','bench_f','bench_s','sign','fence','campfire','log','fountain','pbench','tex_grass','tex_dirt','tex_water','hill','rocket','plaza','temple','terrain'];
 function load(){return Promise.all(ASSETS.map(n=>new Promise(r=>{const i=new Image();i.onload=()=>r([n,i]);i.onerror=()=>r([n,null]);i.src='assets/'+n+'.png'}))).then(l=>Object.fromEntries(l))}
 function C(w,h){const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';return[c,g]}
 function H(x,y,s){let h=(x*374761393+y*668265263+s*982451653)|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
@@ -122,7 +122,7 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
    if(n%3==0){gg.fillStyle='rgba(150,190,110,.55)';gg.beginPath();gg.ellipse(x,y,6+H(n,5,91)*8,3+H(n,6,91)*3,0,0,7);gg.fill()}const t=spr(n%5==0?'fl_clover':'tuft',n%5==0?9:8);if(t)gg.drawImage(t.c,x-t.w/2,y-t.h)}gg.restore();
   if(I.temple){const tw=I.temple.width*s,th=I.temple.height*s,[tc,tg]=C(tw,th);tg.drawImage(I.temple,0,0,tw,th);objs.push({img:tc,x:P.ox+340*s,y:P.oy,w:tw,h:th,base:P.oy+447*s+M.TE,k:'temple',low:false,scale:s})}
   const f=spr('fountain',150,true);if(f){objs.push({img:f.c,x:Math.round(P.fountain.x-f.w/2),y:Math.round(P.fountain.y-M.TE+30-f.h),w:f.w,h:f.h,base:P.fountain.y+18,k:'fountain',low:false})}
-  P.benches.forEach(b=>{const bn=spr('bench_s',50,false,b.dir==2);if(bn)objs.push({img:bn.c,x:Math.round(b.x-bn.w/2),y:Math.round(b.y-M.TE+6-bn.h),w:bn.w,h:bn.h,base:b.y+2,k:'bench',low:false})});
+  P.benches.forEach(b=>{const bn=spr('pbench',84,true,b.dir==3);if(bn)objs.push({img:bn.c,x:Math.round(b.x-bn.w/2),y:Math.round(b.y-M.TE+14-bn.h),w:bn.w,h:bn.h,base:b.y+2,k:'bench',low:false})});
   statue={x:P.statue.x,base:P.statue.base,lift:P.statue.lift}}
  // painted launchpad hill (baked into ground layer) + rocket/tower sprite (depth-sorted object)
  if(M.launch&&M.launch.hill&&I.hill){const h=M.launch.hill,L=M.launch;

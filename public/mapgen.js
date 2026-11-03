@@ -24,7 +24,7 @@ const paths=[P(3.2,[[60,30],[60,18],[60,10.5]]),P(3.4,[[60,55],[60,72],[60,91]])
 // bridges where paths cross the river
 const rY=x=>{for(let i=0;i<river.pts.length-1;i++){const a=river.pts[i],b=river.pts[i+1];if(x>=a[0]&&x<=b[0])return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0])}return 66};
 const bridges=[];paths.forEach(p=>{for(let i=0;i<p.pts.length-1;i++){const a=p.pts[i],b=p.pts[i+1],fa=a[1]-rY(a[0]),fb=b[1]-rY(b[0]);
- if(fa<0&&fb>=0){const t=fa/(fa-fb),x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;bridges.push({x,y,ang:Math.atan2(b[1]-a[1],b[0]-a[0]),len:river.w+4,wid:p.w+0.8})}}});
+ if(fa<0&&fb>=0){const t=fa/(fa-fb),x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;const ang=Math.atan2(b[1]-a[1],b[0]-a[0]),ra=Math.atan2(rY(x+.5)-rY(x-.5),1),sn=Math.max(.45,Math.abs(Math.sin(ang-ra)));bridges.push({x,y,ang,len:river.w/sn+4,wid:p.w+0.8})}}});
 const inBridge=(px,py)=>bridges.some(b=>{const dx=px-b.x,dy=py-b.y,u=dx*Math.cos(b.ang)+dy*Math.sin(b.ang),v=-dx*Math.sin(b.ang)+dy*Math.cos(b.ang);return Math.abs(u)<b.len/2&&Math.abs(v)<b.wid/2});
 for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const cx=x+.5,cy=y+.5,i=I(x,y);
  const dw=dpoly(cx,cy,river.pts);if(dw<river.w/2){ground[i]=inBridge(cx,cy)?4:3;if(ground[i]==3)solid[i]=1;resv[i]=1;continue}
@@ -75,7 +75,7 @@ parks.forEach((p,pi)=>{const ga=Math.atan2(plaza.cy-p.cy,plaza.cx-p.cx);p.hedge=
  for(let y=Math.floor(p.cy-p.r-1);y<=p.cy+p.r+1;y++)for(let x=Math.floor(p.cx-p.r-1);x<=p.cx+p.r+1;x++){if(!inb(x,y))continue;const d=Math.hypot(x+.5-p.cx,y+.5-p.cy);if(d>p.r+.6)continue;
   const i=I(x,y);if(ground[i]==1||ground[i]==3)continue;resv[i]=1;
   if(d>p.r-.6){let da=Math.abs(Math.atan2(y+.5-p.cy,x+.5-p.cx)-ga);if(da>Math.PI)da=2*Math.PI-da;if(da*p.r>1.6){solid[i]=1;p.hedge.push([x,y])}else ground[i]=1}}
- const fx=Math.floor(p.cx)-1,fy=Math.floor(p.cy)-1;add('pfountain',fx,fy,3,3);
+ const fx=Math.floor(p.cx)-1,fy=Math.floor(p.cy)-1;objects.push({k:'flowerbed',x:fx,y:fy+1,w:3,h:1,v:pi+7,flat:1});
  seat(p.cx,p.cy-2.4,0,'bench');seat(p.cx,p.cy+3.2,1,'bench');if(p.r>5){seat(p.cx-3.1,p.cy+.4,3,'benchv');seat(p.cx+3.1,p.cy+.4,2,'benchv')}
  [[-3,-3],[2,-3],[-3,2],[2,2]].forEach(([a,b])=>{if(p.r>5)objects.push({k:'flowerbed',x:Math.floor(p.cx)+a,y:Math.floor(p.cy)+b,w:2,h:1,v:pi+a+b,flat:1})});});
 // campfire clearing
@@ -111,7 +111,8 @@ for(let n=0,c=0;n<400&&c<10;n++){const p=paths[Math.floor(R()*paths.length)];if(
 // trees: forest border + scattered
 for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=I(x,y);if(resv[i])continue;const e=Math.min(x,y,MW-1-x,MH-1-y)+Math.sin(x*.7)*1.2+Math.cos(y*.9)*1.2;
  const near=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>inb(x+a,y+b)&&ground[I(x+a,y+b)]==1);
- if(e<5.5?R()<.62:(!near&&R()<.085)){const pine=e<5.5?R()<.55:R()<.2;add('tree',x,y,1,1,Math.floor(R()*8),1,{pine,jx:Math.floor(R()*7)-3,jy:Math.floor(R()*5)-2})}
+ let cov=false;for(let b=-4;b<=0&&!cov;b++)for(let a=-2;a<=2;a++)if(inb(x+a,y+b)&&(ground[I(x+a,y+b)]==1||ground[I(x+a,y+b)]==4)){cov=true;break}
+ if(!cov&&(e<5.5?R()<.62:(!near&&R()<.085))){const pine=e<5.5?R()<.55:R()<.2;add('tree',x,y,1,1,Math.floor(R()*8),1,{pine,jx:Math.floor(R()*7)-3,jy:Math.floor(R()*5)-2})}
  else if(e<5.5?R()<.25:(!near&&R()<.04))objects.push({k:'bush',x,y,w:1,h:1,v:Math.floor(R()*4)});else if(!near&&e>=5.5&&R()<.02)objects.push({k:'flowerbed',x,y,w:2,h:1,v:Math.floor(R()*50),flat:1,wild:1})}
 // ensure trees don't sit on map edge holes: border solid
 for(let x=0;x<MW;x++){solid[I(x,0)]=1;solid[I(x,MH-1)]=1}for(let y=0;y<MH;y++){solid[I(0,y)]=1;solid[I(MW-1,y)]=1}
