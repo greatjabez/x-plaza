@@ -16,17 +16,30 @@ const P=(w,pts)=>({w,pts:cr(pts)});
 const paths=[P(3.2,[[60,30],[60,18],[60,10.5]]),P(3.4,[[60,55],[60,72],[60,91]]),
  P(3,[[74,43],[88,41],[102,45],[122,43]]),P(3,[[46,43],[32,45],[18,41],[-2,43]]),
  P(2.6,[[70,32],[80,23],[94,17],[108,14]]),P(2.6,[[50,32],[40,23],[26,17],[12,14]]),
- P(2.6,[[71,52],[82,59],[90,70],[95,86]]),P(2.6,[[49,52],[38,59],[30,70],[25,86]]),
+ P(2.6,[[71,52],[82,59],[91,60.5],[97.5,63.2]]),P(2.6,[[49,52],[38,59],[30,70],[25,86]]),
  P(2.2,[[108,14],[111,28],[102,45]]),
  P(2.2,[[25,86],[42,81],[60,80],[78,81],[95,86]]),
  {w:2.4,ring:1,pts:Array.from({length:61},(_,i)=>{const a=(125+i/60*290)*Math.PI/180;return[60+Math.cos(a)*31,41+Math.sin(a)*19.5]})},
  P(2,[[30,45],[30,58],[22,62]]),P(2,[[90,41],[92,56],[100,62]]),P(2,[[40,23],[44,12],[52,8]]),P(2,[[80,23],[76,12],[68,8]])];
+paths.push(P(2.6,[[50.3,53],[44,52.5],[35,49],[25,45.5],[15,43]]));
+paths.push(P(2.6,[[89.6,70],[91,74],[95,86]]));
 // bridges where paths cross the river
 const rY=x=>{for(let i=0;i<river.pts.length-1;i++){const a=river.pts[i],b=river.pts[i+1];if(x>=a[0]&&x<=b[0])return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0])}return 66};
 const bridges=[];paths.forEach(p=>{for(let i=0;i<p.pts.length-1;i++){const a=p.pts[i],b=p.pts[i+1],fa=a[1]-rY(a[0]),fb=b[1]-rY(b[0]);
  if(fa<0&&fb>=0){const t=fa/(fa-fb),x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;const ang=Math.atan2(b[1]-a[1],b[0]-a[0]),ra=Math.atan2(rY(x+.5)-rY(x-.5),1),sn=Math.max(.45,Math.abs(Math.sin(ang-ra)));bridges.push({x,y,ang,len:river.w/sn+4,wid:p.w+0.8})}}});
+// pavilion island (assets/pav_island.png 737x642, island grass centre at img (370,470)) replaces the east diagonal bridge
+const pv={cx:89,cy:68.1,s:.2,ic:[370,470],irx:4.1,iry:2.0,prx:8,pry:5,ang:1.054};
+{const k=bridges.findIndex(b=>Math.abs(b.x-pv.cx)<3&&Math.abs(b.y-pv.cy)<3);if(k>=0)bridges.splice(k,1)}
+pv.ox=pv.cx*T-pv.ic[0]*pv.s;pv.oy=pv.cy*T-pv.ic[1]*pv.s;
+pv.br=[{x:pv.cx+Math.cos(pv.ang)*3.9,y:pv.cy+Math.sin(pv.ang)*3.9,ang:pv.ang,len:4.6,wid:2.4},{x:94.5,y:65.2,ang:-0.565,len:6.6,wid:2.4,flip:1}];
+const inEl=(x,y,rx,ry)=>((x-pv.cx)/rx)**2+((y-pv.cy)/ry)**2<1;
+const inPB=(px,py)=>pv.br.some(b=>{const dx=px-b.x,dy=py-b.y,u=dx*Math.cos(b.ang)+dy*Math.sin(b.ang),v=-dx*Math.sin(b.ang)+dy*Math.cos(b.ang);return Math.abs(u)<b.len/2&&Math.abs(v)<b.wid/2});
 const inBridge=(px,py)=>bridges.some(b=>{const dx=px-b.x,dy=py-b.y,u=dx*Math.cos(b.ang)+dy*Math.sin(b.ang),v=-dx*Math.sin(b.ang)+dy*Math.cos(b.ang);return Math.abs(u)<b.len/2&&Math.abs(v)<b.wid/2});
 for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const cx=x+.5,cy=y+.5,i=I(x,y);
+ if(inEl(cx,cy,pv.irx,pv.iry)){ground[i]=0;resv[i]=1;const u=(cx*T-pv.ox)/pv.s,v=(cy*T-pv.oy)/pv.s;if((u>300&&u<590&&v>300&&v<470)||(Math.abs(u-205)<40&&v>290&&v<360))solid[i]=1;continue}
+ if(inPB(cx,cy)&&inEl(cx,cy,pv.prx+1.5,pv.pry+1.5)){ground[i]=4;resv[i]=1;continue}
+ if(inEl(cx,cy,pv.prx,pv.pry)){ground[i]=3;solid[i]=1;resv[i]=1;continue}
+ if(inEl(cx,cy,pv.prx+1.3,pv.pry+1.3))resv[i]=1;
  const dw=dpoly(cx,cy,river.pts);if(dw<river.w/2){ground[i]=inBridge(cx,cy)?4:3;if(ground[i]==3)solid[i]=1;resv[i]=1;continue}
  if(Math.hypot(cx-plaza.cx,cy-plaza.cy)<plaza.r){ground[i]=2;resv[i]=1;continue}
  for(const p of paths)if(dpoly(cx,cy,p.pts)<p.w/2){ground[i]=1;resv[i]=1;break}
@@ -63,8 +76,8 @@ const launch={hill,rocket:{x:hill.ox+hill.pad[0]*hill.s,y:hill.oy+hill.pad[1]*hi
 // raised temple plaza: painted platform (assets/plaza.png) one level up, temple at the back, fountain + 2 benches in front
 const pz={ox:576,oy:320,s:.75,iw:1024,ih:768,T:[[512,470,332,170,55]],S:[[1,262,575,350,672],[1,690,572,775,668]]};
 pz.fountain={x:pz.ox+512*pz.s,y:pz.oy+540*pz.s+TE};pz.statue={x:pz.ox+512*pz.s,base:pz.oy+345*pz.s+TE,lift:TE};
-mound(pz,(x,y)=>{const u=(x-pz.ox)/pz.s,v=(y-pz.oy)/pz.s;if(u>345&&u<678&&v>235&&v<447)return true;if(Math.abs(u-512)<74&&Math.abs(v-528)<46&&((u-512)/74)**2+((v-528)/46)**2<1)return true;if((Math.abs(u-260)<16||Math.abs(u-752)<16)&&v>395&&v<425)return true;return false});
-pz.benches=[[-170,0,3],[170,0,2]].map(([dx,dy,dir])=>({x:pz.fountain.x+dx,y:pz.fountain.y+dy,dir}));pz.benches.forEach(b=>seats.push({x:Math.round(b.x),y:Math.round(b.y),dir:b.dir,kind:'pbench'}));
+mound(pz,(x,y)=>{const u=(x-pz.ox)/pz.s,v=(y-pz.oy)/pz.s;if(u>345&&u<678&&v>235&&v<447)return true;if(((u-512)/40)**2+((v-536)/26)**2<1)return true;if((Math.abs(u-260)<16||Math.abs(u-752)<16)&&v>395&&v<425)return true;return false});
+pz.benches=[].map(([dx,dy,dir])=>({x:pz.fountain.x+dx,y:pz.fountain.y+dy,dir}));pz.benches.forEach(b=>seats.push({x:Math.round(b.x),y:Math.round(b.y),dir:b.dir,kind:'pbench'}));
 // west terraced hill (assets/terrain.png): 3 tiers, waterfall + pond, pale-white roadster on top, stream + bridge at the foot
 const tr={ox:48,oy:282,s:.55,iw:1024,ih:768,T:[[520,540,380,125,45],[540,385,330,115,75],[500,185,235,78,100]],S:[[1,285,585,410,670],[2,325,450,400,545],[2,640,490,715,590],[3,365,200,450,360]],wm:'000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001110000000000000000000000000000000000000000000000000000000000000111000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000000000110000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000001100000000000000000000000000000000000000000000000000000000001111000000000000000000000000000000000000000000000000000000000001111111111111000000000000000000000000000000000000000000000000000111111111111100000000000000000000000000000000000000000000000000001111111111100000000000000000000000000000000000000000000000000000011111110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000001110000000000000000000000000000000000000000000000000000000000000111000000000000000000000000000000000000000000000000000000000000011100000000000000000000000000000000000000000000000000000000000001001000000000000000000000000000000000000000000000000000000000000011110000000000000000000000000000000000000000000000000000000000000111100000000000000000000000000000000000000000000000000000000000001111100000000000000000000000000000000000000000000000000000000000111111110000000000000000000000000000000000000000000000000000000000011110000001000000000000000000000000000000000000000000000000000000000000001110000000000000000000000000000000000000000000000000000000000000111111000000000000000000000000000000000000000000000000000000000011111110000000000000000011000000000000000000000000000000000000000011111111000000000001111111000000000000000000000000000000000000000011111111111111111100001000000000000000000000000000000000000000000011111111111111100000000000000000000000000000000000000000000000000001110000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'};
 mound(tr,(x,y,L)=>{const u=(x-tr.ox)/tr.s,v=(y-tr.oy)/tr.s;if(u<0||v<0||u>=1024||v>=768)return false;if(L==3&&u>280&&v>125&&((u<470&&v<228)||(u<540&&v<205)))return true;return tr.wm[Math.floor(v/16)*64+Math.floor(u/16)]=='1'&&!(u>285&&u<410&&v>585&&v<670)});
@@ -89,6 +102,11 @@ cf.ls=.29;cf.lx=cf.cx-404*cf.ls;cf.ly=cf.cy-60-170*cf.ls;cf.posts=[[12,300],[255
 parks.forEach(p=>{p.hedge=(p.hedge||[]).filter(([x,y])=>{const dx=(x*T+8-cf.cx)/(330*cf.s+16),dy=(y*T+8-cf.cy)/(235*cf.s+16),inn=dx*dx+dy*dy<1;if(inn)solid[I(x,y)]=0;return !inn})});
 cf.lamps=[[cf.cx-112,cf.cy+34],[cf.cx+114,cf.cy+14]];cf.lamps.forEach(([x,y])=>solid[I(Math.floor(x/T),Math.floor((y-3)/T))]=1);
 cf.posts.forEach(([x,y])=>solid[I(Math.floor(x/T),Math.floor((y-3)/T))]=1);
+// cozy tree ring around the campfire clearing (keeps path entrances open)
+for(let n=0;n<84;n++){const a=n/42*Math.PI*2+(n>=42?.07:0),rr=n>=42?1.55:1.2+(n%2)*.1,px=cf.cx+Math.cos(a)*(330*cf.s+20)*rr,py=cf.cy+Math.sin(a)*(235*cf.s+44)*rr,tx=Math.floor(px/T),ty=Math.floor(py/T);
+ if(!inb(tx,ty)||solid[I(tx,ty)])continue;let ok=true;for(let j=-1;j<=1&&ok;j++)for(let i=-1;i<=1;i++){const k=I(tx+i,ty+j);if(inb(tx+i,ty+j)&&(ground[k]==1||ground[k]>=3||hgt[k]!==0||(solid[k]&&!objects.some(o=>o.k=='tree'&&o.x==tx+i&&o.y==ty+j)))){ok=false;break}}for(let j=-3;j<=0&&ok;j++)if(inb(tx,ty+j)&&hgt[I(tx,ty+j)]!==0)ok=false
+ if(!ok)continue;if(objects.some(o=>o.k=='tree'&&Math.abs(o.x-tx)<2&&Math.abs(o.y-ty)<2))continue;
+ objects.push({k:'tree',x:tx,y:ty,w:1,h:1,v:n,pink:n%3!=1,big:1,jx:Math.round((px-tx*T-8)),jy:0});solid[I(tx,ty)]=1;resv[I(tx,ty)]=1}
 // seats become objects (non-solid sprites) + reserve their tiles
 seats.forEach(s=>{const tx=Math.floor(s.x/T),ty=Math.floor(s.y/T);if(inb(tx,ty))resv[I(tx,ty)]=1;objects.push({k:s.kind,x:s.x/T,y:s.y/T,w:1,h:1,v:s.dir,seat:1})});
 // houses
@@ -124,5 +142,5 @@ for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const i=I(x,y);if(resv[i])continue;co
  else if(e<5.5?R()<.25:(!near&&R()<.04))objects.push({k:'bush',x,y,w:1,h:1,v:Math.floor(R()*4)});else if(!near&&e>=5.5&&R()<.02)objects.push({k:'flowerbed',x,y,w:2,h:1,v:Math.floor(R()*50),flat:1,wild:1})}
 // ensure trees don't sit on map edge holes: border solid
 for(let x=0;x<MW;x++){solid[I(x,0)]=1;solid[I(x,MH-1)]=1}for(let y=0;y<MH;y++){solid[I(0,y)]=1;solid[I(MW-1,y)]=1}
-return {T,MW,MH,cf,shrine,tiers,TE,launch,pz,tr,hgt:Array.from(hgt),ramps,ground:Array.from(ground),solid:Array.from(solid),paths,river,plaza,parks,bridges,objects,seats:seats.map(s=>({x:s.x,y:s.y,dir:s.dir,kind:s.kind})),spawn:{x:60*T,y:49*T}}}
+return {T,MW,MH,cf,pv,shrine,tiers,TE,launch,pz,tr,hgt:Array.from(hgt),ramps,ground:Array.from(ground),solid:Array.from(solid),paths,river,plaza,parks,bridges,objects,seats:seats.map(s=>({x:s.x,y:s.y,dir:s.dir,kind:s.kind})),spawn:{x:60*T,y:49*T}}}
 if(typeof module!='undefined')module.exports=MapGen;else G.MapGen=MapGen})(this);

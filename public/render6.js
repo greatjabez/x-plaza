@@ -1,6 +1,6 @@
 // v6 storybook pastel renderer: prerenders ground + depth-sorted sprites from generated assets
 (function(G){
-const ASSETS=['tree_pink1','tree_pink2','tree_mint1','tree_mint2','topiary','fbush','fl_tulip','fl_daisy','fl_bluebell','fl_clover','toadstool','lilypad','rock','tuft','arch','well','lantern','bench_f','bench_s','sign','fence','campfire','log','fountain','pbench','tex_grass','tex_dirt','tex_water','hill','rocket','plaza','temple','terrain','cf_ground','cf_lights'];
+const ASSETS=['tree_pink1','tree_pink2','tree_mint1','tree_mint2','topiary','fbush','fl_tulip','fl_daisy','fl_bluebell','fl_clover','toadstool','lilypad','rock','tuft','arch','well','lantern','bench_f','bench_s','sign','fence','campfire','log','fountain','pbench','tex_grass','tex_dirt','tex_water','hill','rocket','plaza','temple','terrain','cf_ground','cf_lights','pav_island','pav_bridge','pav_bridge2','statue'];
 function load(){return Promise.all(ASSETS.map(n=>new Promise(r=>{const i=new Image();i.onload=()=>r([n,i]);i.onerror=()=>r([n,null]);i.src='assets/'+n+'.png'}))).then(l=>Object.fromEntries(l))}
 function C(w,h){const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));const g=c.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';return[c,g]}
 function H(x,y,s){let h=(x*374761393+y*668265263+s*982451653)|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
@@ -31,6 +31,9 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
  gg.drawImage(masked(g=>strokeP(g,M.river.pts,M.river.w+.55),'#e3bf98',1),0,0);
  gg.drawImage(masked(g=>strokeP(g,M.river.pts,M.river.w),pat(gg,'tex_water',96),1),0,0);
  gg.drawImage(masked(g=>strokeP(g,M.river.pts,M.river.w-1.4),'rgba(120,200,200,.25)',6),0,0);
+ if(M.pv){const q=M.pv,el=(g,d)=>{g.beginPath();g.ellipse(q.cx*T,q.cy*T,(q.prx+d)*T,(q.pry+d)*T,0,0,7);g.fill()};
+  gg.drawImage(masked(g=>el(g,.55),'#c99a76',1),0,0);gg.drawImage(masked(g=>el(g,.28),'#e3bf98',1),0,0);gg.drawImage(masked(g=>strokeP(g,M.river.pts,M.river.w),pat(gg,'tex_water',96),1),0,0);gg.drawImage(masked(g=>el(g,0),pat(gg,'tex_water',96),1),0,0);
+  gg.drawImage(masked(g=>el(g,-1.4),'rgba(120,200,200,.25)',6),0,0)}
  const W_=(x,y)=>M.ground[Math.floor(y/T)*M.MW+Math.floor(x/T)]==3;
  // lily pads
  for(let n=0,c=0;n<4000&&c<70;n++){const x=H(n,5,41)*W,y=H(n,6,41)*Hh;if(!W_(x,y)||!W_(x+14,y)||!W_(x-14,y)||!W_(x,y+12)||!W_(x,y-12))continue;const s=spr('lilypad',12+H(n,7,1)*8,true,H(n,8,1)<.5);gg.globalAlpha=.95;gg.drawImage(s.c,x-s.w/2,y-s.h/2);gg.globalAlpha=1;c++}
@@ -42,6 +45,9 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
   [[-1],[1]].forEach(([s])=>{gg.fillStyle='#e9d6c4';gg.beginPath();gg.roundRect(-L/2,s*Wd/2-(s>0?5:0),L,5,3);gg.fill();gg.fillStyle='#f7ece0';gg.fillRect(-L/2+2,s*Wd/2-(s>0?5:0)+1,L-4,1.5);
    [-L/2,L/2-8].forEach(x=>{gg.fillStyle='#dcc6b2';gg.beginPath();gg.roundRect(x,s*Wd/2-(s>0?8:-1)-1,8,8,2);gg.fill();gg.fillStyle='#f4e6d8';gg.fillRect(x+1,s*Wd/2-(s>0?8:-1),6,2)})});
   gg.restore()});
+ // pavilion island: island baked, its upper half (willow+pavilion) depth-sorted later; arched wooden bridges baked over water
+ if(M.pv&&I.pav_island){const q=M.pv,im=I.pav_island;gg.drawImage(im,q.ox,q.oy,im.width*q.s,im.height*q.s);
+  if(I.pav_bridge){q.br.forEach(r=>{const b=r.flip?I.pav_bridge2:I.pav_bridge;if(!b)return;const L=r.len*T*1.32,sc=L/Math.hypot(b.width,b.height*.9);gg.save();gg.translate(r.x*T,r.y*T);gg.rotate(r.flip?r.ang+0.72:r.ang-0.72);gg.drawImage(b,-b.width*sc/2,-b.height*sc/2,b.width*sc,b.height*sc);gg.restore()})}}
  // occupied tiles (for decor scattering)
  const occ=new Set();M.objects.forEach(o=>{for(let j=-1;j<=Math.ceil(o.h||1);j++)for(let i=-1;i<=Math.ceil(o.w||1);i++)occ.add((Math.floor(o.x)+i)+','+(Math.floor(o.y)+j))});
  if(M.launch&&M.launch.hill){const h=M.launch.hill;for(let j=Math.floor((h.oy+60*h.s)/T);j<=Math.ceil((h.oy+715*h.s)/T);j++)for(let i=Math.floor((h.ox+90*h.s)/T);i<=Math.ceil((h.ox+955*h.s)/T);i++)occ.add(i+','+j)}
@@ -58,7 +64,7 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
  const put=(s,bx,by,o)=>{if(!s)return;objs.push(Object.assign({img:s.c,x:Math.round(bx-s.w/2),y:Math.round(by-s.h),w:s.w,h:s.h,base:by,k:'',low:false},o||{}))};
  M.objects.forEach(o=>{const X=o.x*T,Y=o.y*T;
   switch(o.k){
-   case 'tree':{const tx=o.x,ty=o.y,e=Math.min(tx,ty,M.MW-tx,M.MH-ty),r=H(tx,ty,21);const pink=e<7?r<.22:r<.5;const big=H(tx,ty,22)<.6;
+   case 'tree':{const tx=o.x,ty=o.y,e=Math.min(tx,ty,M.MW-tx,M.MH-ty),r=H(tx,ty,21);const pink=o.pink!==undefined?o.pink:e<7?r<.22:r<.5;const big=o.big||H(tx,ty,22)<.6;
     const n=pink?(big?'tree_pink1':'tree_pink2'):(big?'tree_mint1':'tree_mint2');const s=spr(n,(big?74:60)+H(tx,ty,23)*14,false,H(tx,ty,24)<.5);put(s,X+8+(o.jx||0),Y+15+(o.jy||0),{k:'tree'});break}
    case 'bush':put(spr(o.v%2?'fbush':'topiary',20+(o.v%3)*3),X+8,Y+15,{k:'bush'});break;
    case 'fountain':put(spr('fountain',o.w*T+10,true),X+o.w*T/2,Y+o.h*T+4,{k:'fountain'});break;
@@ -120,9 +126,11 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
   gg.save();for(let n=0;n<140;n++){const a=H(n,3,91)*Math.PI*2,r=Math.sqrt(H(n,4,91)),u=512+Math.cos(a)*r*290,v=500+Math.sin(a)*r*120;if(u>330&&u<690&&v<455)continue;if(Math.abs(u-512)<95&&Math.abs(v-540)<70)continue;const x=P.ox+u*s,y=P.oy+v*s;
    if(n%3==0){gg.fillStyle='rgba(150,190,110,.55)';gg.beginPath();gg.ellipse(x,y,6+H(n,5,91)*8,3+H(n,6,91)*3,0,0,7);gg.fill()}const t=spr(n%5==0?'fl_clover':'tuft',n%5==0?9:8);if(t)gg.drawImage(t.c,x-t.w/2,y-t.h)}gg.restore();
   if(I.temple){const tw=I.temple.width*s,th=I.temple.height*s,[tc,tg]=C(tw,th);tg.drawImage(I.temple,0,0,tw,th);objs.push({img:tc,x:P.ox+340*s,y:P.oy,w:tw,h:th,base:P.oy+447*s+M.TE,k:'temple',low:false,scale:s})}
-  const f=spr('fountain',150,true);if(f){objs.push({img:f.c,x:Math.round(P.fountain.x-f.w/2),y:Math.round(P.fountain.y-M.TE+30-f.h),w:f.w,h:f.h,base:P.fountain.y+18,k:'fountain',low:false})}
+  const f=spr('fountain',75,true);if(f){anims.push({k:'fdrop',x:P.fountain.x,y:P.fountain.y-M.TE+15-f.h*.62,w:f.w});objs.push({img:f.c,x:Math.round(P.fountain.x-f.w/2),y:Math.round(P.fountain.y-M.TE+15-f.h),w:f.w,h:f.h,base:P.fountain.y+9,k:'fountain',low:false})}
   P.benches.forEach(b=>{const bn=spr('pbench',84,true,b.dir==3);if(bn)objs.push({img:bn.c,x:Math.round(b.x-bn.w/2),y:Math.round(b.y-M.TE+14-bn.h),w:bn.w,h:bn.h,base:b.y+2,k:'bench',low:false})});
-  statue={x:P.statue.x,base:P.statue.base,lift:P.statue.lift}}
+  if(I.statue){const st=P.statue,W2=78,h2=W2*I.statue.height/I.statue.width,[sc,sg]=C(W2,h2);sg.drawImage(I.statue,0,0,W2,h2);gg.save();gg.fillStyle='rgba(70,110,30,.18)';gg.beginPath();gg.ellipse(st.x+3,st.base-st.lift-1,W2*.42,4,0,0,7);gg.fill();gg.restore();objs.push({img:sc,x:Math.round(st.x-W2/2),y:Math.round(st.base-st.lift-h2+2),w:sc.width,h:sc.height,base:st.base,k:'statue',low:false})}
+  objs.sort((a,b)=>a.base-b.base)}
+ if(M.pv&&I.pav_island){const q=M.pv,im=I.pav_island,cut=440,[c,g]=C(im.width*q.s,cut*q.s);g.drawImage(im,0,0,im.width,cut,0,0,im.width*q.s,cut*q.s);objs.push({img:c,x:Math.round(q.ox),y:Math.round(q.oy),w:c.width,h:c.height,base:q.oy+470*q.s,k:'pavilion',low:false});objs.sort((a,b)=>a.base-b.base)}
  // painted campfire clearing: decal baked into ground, string-light rig depth-sorted
  if(M.cf&&I.cf_ground){const q=M.cf,g=I.cf_ground;gg.drawImage(g,q.ox,q.oy,g.width*q.s,g.height*q.s);anims.push({k:'cfire',x:q.cx,y:q.cy-4});
   if(I.cf_lights){const L=I.cf_lights,w=L.width*q.ls,h=L.height*q.ls,[c,g2]=C(w,h);g2.drawImage(L,0,0,w,h);objs.push({img:c,x:Math.round(q.lx),y:Math.round(q.ly),w:c.width,h:c.height,base:q.posts[1][1],k:'lights',low:false});
@@ -142,10 +150,13 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
   const ln=spr('lantern',34);if(ln)(M.ramps||[]).filter(r=>r.lv==1).forEach(r=>[r.x0-14,r.x1+14].forEach(x=>{const by=r.y1-6;objs.push({img:ln.c,x:Math.round(x-ln.w/2),y:Math.round(by-ln.h),w:ln.w,h:ln.h,base:by,k:'lantern',low:false})}));
   objs.sort((a,b)=>a.base-b.base)}
  // soft shadows
- gg.save();objs.forEach(o=>{if(o.k=='bunting'||o.k=='lights'||o.k=='rocket'||o.k=='tower')return;const r=o.k=='tree'?o.w*.36:o.w*.38;gg.fillStyle=o.k=='tree'?'rgba(70,100,60,.22)':'rgba(70,100,60,.16)';gg.beginPath();gg.ellipse(o.x+o.w/2+2,o.base-1,r,o.k=='tree'?6:3,0,0,7);gg.fill()});gg.restore();
+ gg.save();objs.forEach(o=>{if(o.k=='bunting'||o.k=='pavilion'||o.k=='lights'||o.k=='rocket'||o.k=='tower')return;const r=o.k=='tree'?o.w*.36:o.w*.38;gg.fillStyle=o.k=='tree'?'rgba(70,100,60,.22)':'rgba(70,100,60,.16)';gg.beginPath();gg.ellipse(o.x+o.w/2+2,o.base-1,r,o.k=='tree'?6:3,0,0,7);gg.fill()});gg.restore();
  const[wc,wg]=C(W,Hh);wg.drawImage(gc,0,0);objs.forEach(o=>wg.drawImage(o.img,o.x,o.y));
  const GS=64,grid={};objs.forEach((o,i)=>{if(o.low)return;for(let gy=Math.floor(o.y/GS);gy<=Math.floor((o.y+o.h)/GS);gy++)for(let gx=Math.floor(o.x/GS);gx<=Math.floor((o.x+o.w)/GS);gx++)(grid[gx+','+gy]=grid[gx+','+gy]||[]).push(i)});
  const sp=[];for(let n=0;n<4000&&sp.length<500;n++){const x=H(n,1,31)*W|0,y=H(n,2,31)*Hh|0;if(W_(x,y)&&W_(x,y-6)&&W_(x,y+6))sp.push([x,y,H(n,3,31)*10])}
  const[mc,mg]=C(240,180);mg.drawImage(wc,0,0,240,180);
- return{statue,world:wc,ground:gc,objs,grid,GS,anims,sp,boats:[],mini:mc,W,H:Hh,river:M.river}}
+ const flow=[];{const rp=M.river.pts;let acc=0;for(let i=0;i<rp.length-1;i++){const a=rp[i],b=rp[i+1],dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy);for(let t=0;t<l;t+=.9){acc++;const off=(H(acc,1,77)-.5)*(M.river.w-1.6),x=(a[0]+dx*t/l-dy/l*off)*T,y=(a[1]+dy*t/l+dx/l*off)*T;if(W_(x,y))flow.push([x,y,dx/l,dy/l,H(acc,2,77),26])}}}
+ if(M.pv){const q=M.pv;for(let n=0;n<70;n++){const a=H(n,3,78)*7,r=.55+H(n,4,78)*.4,x=(q.cx+Math.cos(a)*q.prx*r)*T,y=(q.cy+Math.sin(a)*q.pry*r)*T;if(W_(x,y))flow.push([x,y,-Math.sin(a)*.6,Math.cos(a)*.35,H(n,5,78),16])}}
+ if(M.tr&&M.tr.wm){const P=M.tr,wm=P.wm;for(let i=0;i<wm.length;i++)if(wm[i]=='1'){const cx=i%64,cy=i/64|0,fall=wm[i-64]=='1'&&wm[i+64]=='1'&&wm[i-1]!='1'||wm[i+1]!='1'&&wm[i-64]=='1';const x=P.ox+(cx*16+8)*P.s,y=P.oy+(cy*16+8)*P.s;flow.push([x,y,0,fall?1:.15,H(i,6,79),fall?10:6,fall?1:0])}}
+ return{flow,statue,world:wc,ground:gc,objs,grid,GS,anims,sp,boats:[],mini:mc,W,H:Hh,river:M.river}}
 G.Render6={load,bake}})(this);

@@ -314,6 +314,7 @@ function bake(M){const T=M.T,W=M.MW*T,Hh=M.MH*T;const masks={};
  const [mc,mg]=C(240,180);mg.imageSmoothingEnabled=true;mg.drawImage(wc,0,0,240,180);
  return{statue,world:wc,ground:gc,objs,grid,GS,anims,sp,boats,mini:mc,W,H:Hh,river:M.river}}
 function drawAnims(ctx,B,cam,vw,vh,now){const vis=(x,y,m=40)=>x>cam.x-m&&y>cam.y-m&&x<cam.x+vw+m&&y<cam.y+vh+m;
+ if(B.flow){for(const f of B.flow){if(!vis(f[0],f[1]))continue;const ph=(now/(f[6]?700:2600)+f[4])%1,d=(ph-.5)*f[5],x=f[0]+f[2]*d-cam.x,y=f[1]+f[3]*d-cam.y,al=Math.sin(ph*Math.PI);ctx.fillStyle=f[6]?`rgba(255,255,255,${.55*al})`:`rgba(240,255,255,${.38*al})`;if(f[6])ctx.fillRect(x|0,y|0,1,3);else{ctx.fillRect(Math.round(x-2),Math.round(y),4,1);ctx.fillStyle=`rgba(255,255,255,${.22*al})`;ctx.fillRect(Math.round(x-1-f[2]*3),Math.round(y-f[3]*3),2,1)}}}
  ctx.fillStyle='#ffffff';for(const s of B.sp){if(!vis(s[0],s[1]))continue;const ph=(now/900+s[2])%4;if(ph<2.6)ctx.fillRect(s[0]-cam.x,s[1]-cam.y,1,1);else if(ph<3){ctx.fillRect(s[0]-cam.x-1,s[1]-cam.y,3,1);ctx.fillRect(s[0]-cam.x,s[1]-cam.y-1,1,3)}}
  // boats along river
  const pts=B.river.pts,T=16;B.boats.forEach(b=>{let t=((b.t+now*b.s)%1+1)%1;const f=t*(pts.length-1),i=Math.floor(f),a=pts[i],c=pts[Math.min(pts.length-1,i+1)],x=(a[0]+(c[0]-a[0])*(f-i))*T,y=(a[1]+(c[1]-a[1])*(f-i))*T+((i%3)-1)*8;if(!vis(x,y))return;
@@ -328,6 +329,7 @@ function drawAnims(ctx,B,cam,vw,vh,now){const vis=(x,y,m=40)=>x>cam.x-m&&y>cam.y
    else{ctx.fillStyle='rgba(220,245,255,.9)';for(let i=0;i<7;i++){const ph=((now/900)+i/7)%1,ang=i*2.4;const r=ph*9,x=X+Math.cos(ang)*r,y=top+(-Math.sin(ph*Math.PI)*4)+ph*8;ctx.fillRect(x|0,y|0,1,2)}}}
   if(a.k=='cfire'){const f=.75+.15*Math.sin(now/90)+.1*Math.sin(now/37+1.3),gr=ctx.createRadialGradient(X,Y,2,X,Y,46*f);gr.addColorStop(0,`rgba(255,170,70,${.32*f})`);gr.addColorStop(1,'rgba(255,140,60,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(X,Y,46*f,0,7);ctx.fill();
    for(let e=0;e<4;e++){const t=((now/1400)+e/4)%1,ex=X+Math.sin(now/300+e*2)*5*t+(e-1.5)*2,ey=Y-6-t*30;ctx.fillStyle=`rgba(255,${180+e*15},90,${.9*(1-t)})`;ctx.fillRect(Math.round(ex),Math.round(ey),2,2)}}
+  if(a.k=='fdrop'){for(let i=0;i<10;i++){const ph=((now/800)+i/10)%1,sx=i%2?-1:1,r=a.w*(.12+.2*(i%3)/2);ctx.fillStyle=`rgba(225,248,255,${.85*(1-ph)})`;ctx.fillRect(Math.round(X+sx*r*ph),Math.round(Y-6*Math.sin(ph*Math.PI)+ph*10),1,2)}}
   if(a.k=='glow'){ctx.fillStyle=`rgba(255,230,140,${.12+.05*Math.sin(now/300+a.x)})`;ctx.beginPath();ctx.arc(X,Y,9,0,7);ctx.fill()}
   if(a.k=='fire'){ctx.fillStyle=`rgba(255,180,80,${.14+.04*Math.sin(now/120)})`;ctx.beginPath();ctx.arc(X,Y,26,0,7);ctx.fill();const f=now/90|0;
    for(let i=0;i<7;i++){const h=5+((i*7+f*3)%7);ctx.fillStyle=['#ff7a1a','#ffb02a','#ffe060'][i%3];ctx.fillRect(X-7+i*2,Y+2-h,2,h)}ctx.fillStyle='#fff6c0';ctx.fillRect(X-1,Y-3,2,3);
