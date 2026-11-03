@@ -33,7 +33,7 @@ button:hover{background:#fbe6ec}button:active{transform:translateY(1px);box-shad
 <button id="go" disabled style="width:100%;margin-top:10px">마을 불러오는 중...</button>
 <p style="font-size:12px;opacity:.8">이동 WASD/방향키/터치 · 모션 1앉기 2자기 3눕기 4달리기(Shift 누르기) 5점프(Space) 6인사 7춤 8울기 9화내기 0발사 · 🔫 발사: 마우스 왼쪽 클릭(커서 쪽으로 조준) · X 프로필: Shift+캐릭터 클릭 · 이모지 Z X C V B N · Enter 채팅 · 의자 옆에서 1 또는 클릭하면 앉아요 · 캐릭터 클릭 시 프로필</p></div></div>
 <div id="died" class="ov" style="display:none"><div class="card" style="text-align:center"><h1>💀 쓰러졌어요</h1><p id="dby"></p><button onclick="location.reload()">다시 접속하기</button></div></div>
-<script src="mapgen.js"></script><script src="render.js"></script>
+<script src="mapgen.js"></script><script src="render.js"></script><script src="render6.js"></script>
 <script>
 const SKIN=['#ffe0c4','#f5c9a0'],SKN=['여자','남자'];
 const HS=['단발','긴머리','삐죽','양갈래','민머리'],HCOL=['#9a6e4e','#f0d48a','#5a5a72','#f2aaaa','#a0cde8','#c4aef0','#f4f4f4'];
@@ -71,7 +71,7 @@ $('mbtn').onclick=e=>{mMute=!mMute;localStorage.setItem('xp_mute',mMute?'1':'0')
 $('mvol').oninput=e=>{mVol=+e.target.value;localStorage.setItem('xp_vol',mVol);if(mVol>0&&mMute){mMute=false;localStorage.setItem('xp_mute','0')}mApply()};
 ['change','pointerup'].forEach(ev=>$('mvol').addEventListener(ev,e=>e.target.blur()));
 $('music').addEventListener('keydown',e=>e.stopPropagation());
-let B=null;M=MapGen();setTimeout(()=>{const t=performance.now();B=Render.bake(M);window.bakeMs=performance.now()-t;$('go').disabled=false;$('go').textContent='광장 입장!'},30);
+let B=null;M=MapGen();Render6.load().then(IMG=>{const t=performance.now();B=IMG.tex_grass?Render6.bake(M,IMG):Render.bake(M);window.bakeMs=performance.now()-t;$('go').disabled=false;$('go').textContent='광장 입장!'});
 const SPC={};
 function shade(h,f){const n=parseInt(h.slice(1),16);const r=Math.min(255,(n>>16)*f|0),g=Math.min(255,(n>>8&255)*f|0),b=Math.min(255,(n&255)*f|0);return`rgb(${r},${g},${b})`}
 let CH=null;fetch('chars.json').then(r=>r.json()).then(j=>CH=j);

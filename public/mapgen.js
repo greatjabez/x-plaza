@@ -39,7 +39,7 @@ const seat=(x,y,dir,kind)=>{seats.push({x:Math.round(x*T),y:Math.round(y*T),dir,
 // centerpiece fountain + bench ring + flower ring
 add('fountain',56,39,8,6);
 for(let i=0;i<8;i++){const an=i/8*Math.PI*2+Math.PI/8,x=60+Math.cos(an)*7.2,y=42+Math.sin(an)*5.6;const dir=Math.abs(Math.cos(an))>.7?(Math.cos(an)>0?2:3):(Math.sin(an)>0?1:0);seat(x,y,dir,dir>=2?'benchv':'bench')}
-add('statue',58,35,5,2);[[53,36],[66,36],[53,48],[66,48]].forEach(([x,y])=>add('plamp',x,y,1,1));
+add('statue',58,33,5,2);add('well',70,33,2,2);[[53,36],[66,36],[53,48],[66,48]].forEach(([x,y])=>add('plamp',x,y,1,1));
 for(let i=0;i<12;i++){const an=i/12*Math.PI*2,x=Math.floor(60+Math.cos(an)*10.5),y=Math.floor(42+Math.sin(an)*8);if(y<38&&x>56&&x<64)continue;if(i%3!=0)add('pot',x,y,1,1,i)}
 // parks with hedges
 const parks=[{cx:30,cy:29,r:6},{cx:90,cy:29,r:6},{cx:45,cy:74.5,r:4.6},{cx:79,cy:74.5,r:4.6}];
