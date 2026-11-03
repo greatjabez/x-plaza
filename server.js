@@ -7,11 +7,12 @@ const players=new Map();let bullets=[],bid=1;function hitPlayer(o,by,dmg,kx,ky){
  if(o.hp<=0){o.dead=true;o.deadAt=Date.now();if(o.seat>=0){seats[o.seat].occ=0;o.seat=-1}o.act='';bc({t:'die',id:o.id});bc({t:'sys',text:`${o.name} 님이 ${by.name} 님에게 쓰러졌어요 💀`});for(const c of wss.clients)if(c.pid==o.id){c.send(JSON.stringify({t:'dead',by:by.name}));setTimeout(()=>c.close(),2000)}}}
 let nid=1;const weapons=new Map();let wid=1;
 function spawnWeapon(){for(let i=0;i<200;i++){const x=(12+Math.random()*(MW-24))*T,y=(10+Math.random()*(MH-20))*T;if(!solid(x,y)){weapons.set(wid,{id:wid++,x,y,kind:Math.random()<.7?'sword':'axe'});return}}}
-for(let i=0;i<14;i++)spawnWeapon();
+const WEAPONS=false; // shooting disabled for now; set true (and client WEAPONS) to restore
+if(WEAPONS)for(let i=0;i<14;i++)spawnWeapon();
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const EMO=['👋','😂','❤️','😮','😡','🎉'];
 const srv=http.createServer((q,s)=>{
- const f=path.join(__dirname,'public',q.url=='/'?'index.html':path.normalize(q.url).replace(/^(\.\.[\/\\])+/,''));
+ const u=q.url.split('?')[0];const f=path.join(__dirname,'public',u=='/'?'index.html':path.normalize(u).replace(/^(\.\.[\/\\])+/,''));
  fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);return s.end()}const ext=path.extname(f);const ct={'.html':'text/html; charset=utf-8','.png':'image/png','.json':'application/json','.ogg':'audio/ogg','.mp3':'audio/mpeg','.js':'application/javascript'}[ext]||'application/octet-stream';
   const r=/bytes=(\d*)-(\d*)/.exec(q.headers.range||'');if(r&&/audio/.test(ct)){const st=r[1]?+r[1]:0,en=r[2]?Math.min(+r[2],d.length-1):d.length-1;s.writeHead(206,{'content-type':ct,'accept-ranges':'bytes','content-range':`bytes ${st}-${en}/${d.length}`,'content-length':en-st+1});return s.end(d.subarray(st,en+1))}
   s.writeHead(200,{'content-type':ct,'accept-ranges':'bytes','cache-control':/audio|image/.test(ct)?'public, max-age=86400':'no-cache'});s.end(d)})});
@@ -41,7 +42,7 @@ wss.on('connection',ws=>{let me=null,last={chat:0,emo:0,atk:0,mv:0},msgs=0,win=D
   else if(m.t=='look'){if(now-(last.look||0)<200)return;last.look=now;me.look=XItems.clean(m.look)}
   else if(m.t=='wave'){if(now-last.emo<500)return;last.emo=now;bc({t:'wave',id:me.id})}
   else if(m.t=='emo'){if(now-last.emo<500)return;last.emo=now;const e=EMO[m.i|0];if(e)bc({t:'emo',id:me.id,e})}
-  else if(m.t=='atk'){if(now-last.atk<350)return;last.atk=now;let an=+m.a;if(!isFinite(an))an=[Math.PI/2,-Math.PI/2,Math.PI,0][me.dir|0];me.aim=an;
+  else if(m.t=='atk'){if(!WEAPONS)return;if(now-last.atk<350)return;last.atk=now;let an=+m.a;if(!isFinite(an))an=[Math.PI/2,-Math.PI/2,Math.PI,0][me.dir|0];me.aim=an;
    if(me.act){me.act='';if(me.seat>=0){seats[me.seat].occ=0;me.seat=-1}}
    const vx=Math.cos(an)*7,vy=Math.sin(an)*7,b={id:bid++,o:me.id,x:me.x+Math.cos(an)*10,y:me.y-16+Math.sin(an)*8,vx,vy,life:40,dmg:me.weapon=='axe'?20:me.weapon?15:10};bullets.push(b);bc({t:'shot',id:me.id,b:b.id,x:b.x,y:b.y,vx,vy,a:an})}
  });
