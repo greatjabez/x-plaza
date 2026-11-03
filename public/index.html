@@ -30,7 +30,7 @@ button:hover{background:#fbe6ec}button:active{transform:translateY(1px);box-shad
 <div style="display:flex;gap:10px;align-items:center"><canvas id="pv" width="32" height="48" style="width:64px;height:96px;background:#e6f3dc;border:2px solid #8a6a4f;border-radius:12px"></canvas>
 <div id="opts" style="flex:1;font-size:13px"></div></div>
 <button id="go" disabled style="width:100%;margin-top:10px">마을 불러오는 중...</button>
-<p style="font-size:12px;opacity:.8">이동 WASD/방향키/터치 · 모션 1앉기 2자기 3눕기 4달리기(Shift 누르기) 5점프(Space) 6인사 7춤 8울기 9화내기 0공격 · 공격: 마우스 왼쪽 클릭(커서 방향) · 캐릭터 클릭: X 프로필 · 이모지 Z X C V B N · Enter 채팅 · 의자 옆에서 1 또는 클릭하면 앉아요 · 캐릭터 클릭 시 프로필</p></div></div>
+<p style="font-size:12px;opacity:.8">이동 WASD/방향키/터치 · 모션 1앉기 2자기 3눕기 4달리기(Shift 누르기) 5점프(Space) 6인사 7춤 8울기 9화내기 0발사 · 🔫 발사: 마우스 왼쪽 클릭(커서 쪽으로 조준) · X 프로필: Shift+캐릭터 클릭 · 이모지 Z X C V B N · Enter 채팅 · 의자 옆에서 1 또는 클릭하면 앉아요 · 캐릭터 클릭 시 프로필</p></div></div>
 <div id="died" class="ov" style="display:none"><div class="card" style="text-align:center"><h1>💀 쓰러졌어요</h1><p id="dby"></p><button onclick="location.reload()">다시 접속하기</button></div></div>
 <script src="mapgen.js"></script><script src="render.js"></script>
 <script>
@@ -53,7 +53,7 @@ const mm=document.createElement('div');mm.id='mm';$('emo').appendChild(mm);mt.on
 [['🪑 앉기','1',()=>doAct('sit')],['💤 자기','2',()=>doAct('sleep')],['🛌 눕기','3',()=>doAct('lie')],['🏃 달리기','4/Shift',()=>toggleRun()],
  ['⤴️ 점프','5/Space',()=>doAct('jump')],['🙋 인사','6',()=>send({t:'wave'})],['💃 춤추기','7',()=>doAct('dance')],['😭 울기','8',()=>doAct('cry')],['💢 화내기','9',()=>doAct('angry')]].forEach(([l,k,f])=>{
  const b=document.createElement('button');b.innerHTML='';b.append(l);const s=document.createElement('small');s.textContent=k;b.appendChild(s);b.onclick=e=>{f(e);if(innerWidth<700&&k!='4/Shift')mm.classList.remove('open')};mm.appendChild(b)});
-const ab=document.createElement('button');ab.id='atk';ab.textContent='⚔️ 공격 (클릭)';ab.title='마우스 왼쪽 클릭 / 0';ab.onclick=()=>attack();$('emo').appendChild(ab);
+const ab=document.createElement('button');ab.id='atk';ab.textContent='🔫 발사';ab.title='마우스 왼쪽 클릭 / 0';ab.onclick=()=>attack();$('emo').appendChild(ab);
 const cv=$('c'),ctx=cv.getContext('2d',{alpha:false});let S=3;
 function rs(){cv.width=innerWidth;cv.height=innerHeight;S=innerWidth<700?2:3;ctx.imageSmoothingEnabled=false}addEventListener('resize',rs);rs();
 let dead=0,running=false,waves={},M,ws,myId,players={},weapons={},bubbles={},swings={},me=null,keys={},target=null,cam={x:0,y:0},tick=0;
@@ -105,14 +105,22 @@ function poseOf(p,now,t,dir,act){const side=dir==2||dir==3;let ll=0,lr=0,bob=0,a
  if(act=='angry')anim=(now/150|0)%2?'fwd':'';
  if(act=='cry')yo=(now/300|0)%2;
  if(p.waveUntil>now){const f=((p.waveUntil-now)/130|0)%4;anim=['wave','wave2','wave','up0'][f];if(anim=='up0')anim='wave2';bob=0}
- if(p.swingUntil>now){const k=1-(p.swingUntil-now)/360;
-  if(k<.28){anim='wind';bob=1;lean=side?1:0}else if(k<.5){anim='fwd';lean=side?-1:0}else if(k<.78){anim='follow';bob=1;lean=side?-1:0}else{anim='';bob=k<.9?1:0}
-  ll=lr=0;str=0;arm=0;if(p.swingDir!=null)dir=p.swingDir}
+ if(p.shotAt&&now-p.shotAt<140){const k=(now-p.shotAt)/140;bob=k<.4?1:0;if(side)lean=k<.4?1:0}
  if(p.jumpUntil>now){const k=1-(p.jumpUntil-now)/600;ll=lr=str=0;arm=0;
   if(k<.15){bob=2;sh=1.15;sy=.92;sx=1.05;flare=1}else if(k>.85){bob=k>.93?1:2;sh=1.15;sy=.92;sx=1.05;flare=1}
   else{const q=(k-.15)/.7,h=Math.sin(Math.PI*q)*14;yo=-Math.round(h);sh=1-h/22;if(q<.4||q>.75){ll=lr=1}else{anim=side?'':'wave'}if(side&&q<.5)lean=-1}}
  return{dir,yo,sh,sx,sy,P:[ll,lr,bob,arm,str,lean,anim,flare?1:0].join()}}
 const WH=new WeakMap();function white(sp){if(WH.has(sp))return WH.get(sp);const w=document.createElement('canvas');w.width=CW;w.height=CHH;const g=w.getContext('2d');g.drawImage(sp,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#fff';g.fillRect(0,0,CW,CHH);WH.set(sp,w);return w}
+
+const GUN=(()=>{const c=document.createElement('canvas');c.width=12;c.height=6;const g=c.getContext('2d');const px=(col,pts)=>{g.fillStyle=col;pts.forEach(([x,y,w,h])=>g.fillRect(x,y,w||1,h||1))};
+ px('#1c2646',[[1,0,10,4],[1,3,4,3],[0,1,1,2]]);px('#9fe3d0',[[2,1,8,2],[2,3,2,2]]);px('#ffb7cf',[[9,1,1,1]]);px('#e9fff8',[[3,1,5,1]]);return c})();
+function drawGun(g,X,Y,p,now,yo){if(p.dieAt)return;const a=p.aim!=null?p.aim:[Math.PI/2,-Math.PI/2,Math.PI,0][p.dir||0];const st=p.shotAt?now-p.shotAt:999,rk=st<90?(1-st/90)*3:0;
+ const hx=X+Math.cos(a)*5,hy=Y-17+yo+Math.sin(a)*3;g.save();g.translate(Math.round(hx-Math.cos(a)*rk),Math.round(hy-Math.sin(a)*rk));g.rotate(a-(st<90?Math.sign(Math.cos(a)||1)*.35*(1-st/90):0));if(Math.cos(a)<0)g.scale(1,-1);g.drawImage(GUN,-2,-3);
+ if(st<60){g.fillStyle='#fff6c8';g.fillRect(10,-3,3,5);g.fillRect(12,-1,3,1);g.fillStyle='#ffd27a';g.fillRect(13,-3,1,1);g.fillRect(13,2,1,1)}g.restore()}
+const shots={};
+function drawBullets(){const now=Date.now();for(const k in shots){const b=shots[k],t=(now-b.t)/33;if(t>42||b.end&&now>b.end){delete shots[k];continue}if(b.end)continue;const x=b.x+b.vx*t-cam.x,y=b.y+b.vy*t-cam.y;ctx.fillStyle='#1c2646';ctx.fillRect(Math.round(x)-2,Math.round(y)-2,4,4);ctx.fillStyle='#fff3a8';ctx.fillRect(Math.round(x)-1,Math.round(y)-1,2,2);ctx.fillStyle='rgba(255,240,170,.5)';ctx.fillRect(Math.round(x-b.vx*.6)-1,Math.round(y-b.vy*.6)-1,2,2)}
+ for(const k in pops){const q=pops[k],t=now-q.t;if(t>200){delete pops[k];continue}const r=2+t/40|0;ctx.fillStyle='rgba(255,246,200,'+(1-t/200)+')';ctx.fillRect(q.x-cam.x-r,q.y-cam.y-1,r*2,2);ctx.fillRect(q.x-cam.x-1,q.y-cam.y-r,2,r*2)}}
+const pops={};
 function drawCharAt(g,X,Y,p,now){const L=p.look||[0,0,0,0,0],id=p.id||0,act=p.act||'',t=now+id*977;let xo=0,rot=0,sit=false;
  const bl=act=='sleep'||act=='cry'||(t%3200)<130;
  let{dir,yo,sh,sx,sy,P}=poseOf(p,now,t,p.dir||0,act);
@@ -120,16 +128,17 @@ function drawCharAt(g,X,Y,p,now){const L=p.look||[0,0,0,0,0],id=p.id||0,act=p.ac
  if(act=='lie'||act=='sleep')rot=-Math.PI/2;
  if(act=='angry')xo=((now/40|0)%2)?1:-1;
  if(p.hitUntil>now){xo+=((now/30|0)%2?2:-2)}
+ if(p.shotAt&&now-p.shotAt<80&&p.aim!=null)xo-=Math.round(Math.cos(p.aim)*1.5);
  if(p.dieAt){rot=-Math.min(1,(now-p.dieAt)/450)*Math.PI/2;P='0,0,0,0,0,0,'}
- const sp=sprite(L,dir,P,p.weapon||'',bl||p.dieAt),img=p.hitUntil>now&&(now/60|0)%2?white(sp):sp;
+ const sp=sprite(L,dir,P,'',bl||p.dieAt),img=p.hitUntil>now&&(now/60|0)%2?white(sp):sp;
  g.fillStyle='rgba(0,0,0,.22)';const sw=Math.round((rot?26:16)*sh);g.fillRect(X-sw/2,Y,sw,2);
 
+ const gb=(dir==1)&&!rot&&!sit;if(gb)drawGun(g,X+xo,Y,p,now,yo);
  if(rot){g.save();g.translate(X+xo,Y-6);g.rotate(rot);g.drawImage(img,-14,-36);g.restore()}
  else if(sit){g.drawImage(img,0,0,28,34,X-14+xo,Y-34+yo,28,34);g.fillStyle='#1c2646';g.fillRect(X-6,Y-2,5,3);g.fillRect(X+1,Y-2,5,3)}
  else if(sx!=1||sy!=1){const w=Math.round(28*sx),h=Math.round(44*sy);g.drawImage(img,X-(w>>1)+xo,Y+2-h+yo,w,h)}
  else g.drawImage(img,X-14+xo,Y-42+yo);
- if(p.swingUntil>now&&(p.swingUntil-now)<260){const k=1-(p.swingUntil-now)/260,fx=dir==2?-1:1;g.save();g.strokeStyle=`rgba(255,255,255,${1-k})`;g.lineWidth=2;g.beginPath();
-  const cx=X+(dir==2?-6:dir==3?6:0),cy=Y-18+(dir==0?4:dir==1?-4:0);g.arc(cx,cy,12,-1.6+k*2.6-(fx<0?Math.PI:0),-0.6+k*2.6-(fx<0?Math.PI:0));g.stroke();g.restore()}
+ if(!gb&&!rot&&!sit)drawGun(g,X+xo,Y,p,now,yo);
  if(act=='sleep'){g.fillStyle='#fff';g.font='bold 8px monospace';const z=(now/500|0)%3;for(let i=0;i<=z;i++)g.fillText('z',X+8+i*4,Y-30-i*5)}
  if(act=='cry'&&dir!=1){g.fillStyle='#7fd0ff';const a=(now/80|0)%6;g.fillRect(X-2,Y-24+a+yo,1,2);g.fillRect(X+4,Y-24+((a+3)%6)+yo,1,2)}
  if(act=='angry'){g.fillStyle='#ff4a4a';const a=(now/200|0)%2;g.fillRect(X+5,Y-42-a,2,1);g.fillRect(X+8,Y-42-a,2,1);g.fillRect(X+6,Y-44-a,1,2);g.fillRect(X+9,Y-44-a,1,2);g.fillStyle='rgba(255,80,80,.25)';g.fillRect(X-10+xo,Y-38,20,16)}
@@ -160,10 +169,11 @@ $('go').onclick=()=>{let h=$('hd').value.trim().replace(/^@/,'');if(h&&!/^[A-Za-
   else if(m.t=='chat'){log(m.text,'',m.name);bubbles[m.id]={text:m.text,until:Date.now()+5000}}
   else if(m.t=='emo'){bubbles[m.id]={text:m.e,emo:1,until:Date.now()+3000}}
   else if(m.t=='sys')log(m.text,'s');
-  else if(m.t=='wpick'){delete weapons[m.id];if(m.pid==myId)log('무기를 주웠어요! 마우스 왼쪽 클릭으로 공격 ⚔️','s')}
+  else if(m.t=='wpick'){delete weapons[m.id];if(m.pid==myId)log('총알이 강해졌어요! 마우스 왼쪽 클릭으로 발사 🔫','s')}
   else if(m.t=='weapons'){weapons={};m.weapons.forEach(w=>weapons[w.id]=w)}
   else if(m.t=='wave'){const P=players[m.id];if(P)P.waveUntil=Date.now()+1500;bubbles[m.id]={text:'안녕! 👋',until:Date.now()+2000}}
-  else if(m.t=='swing'){const P=players[m.id];if(P){P.swingUntil=Date.now()+360;if(m.dir!=null){P.swingDir=m.dir;P.dir=m.dir}}}
+  else if(m.t=='shot'){const P=players[m.id];if(P){P.shotAt=Date.now();if(m.id!=myId)P.aim=m.a}shots[m.b]={x:m.x,y:m.y,vx:m.vx,vy:m.vy,t:Date.now()}}
+  else if(m.t=='bend'){if(shots[m.b])shots[m.b].end=1;pops[m.b]={x:m.x,y:m.y,t:Date.now()}}
   else if(m.t=='act'){const P=players[m.id];if(!P)return;if(m.a=='jump')P.jumpUntil=Date.now()+600;else{P.act=m.a;const B={sleep:'💤',cry:'😭',angry:'💢',dance:'🎶'}[m.a];if(B)bubbles[m.id]={text:B,emo:1,until:Date.now()+2500}}}
   else if(m.t=='seated'){if(me){me.rx=m.x;me.ry=m.y;me.dir=m.dir;me.act='seat';target=null}}
   else if(m.t=='die'){const P=players[m.id];if(P)P.dieAt=Date.now()}
@@ -179,8 +189,11 @@ addEventListener('keydown',e=>{if(e.isComposing||e.keyCode==229)return;if(docume
  if(!e.repeat&&NK[e.key])NK[e.key]();if(e.code=='Space'){if(!e.repeat)doAct('jump');e.preventDefault()}if(!['w','a','s','d','shift'].includes(K)&&!K.startsWith('arrow'))return;keys[e.key.toLowerCase()]=1;target=null});
 addEventListener('keyup',e=>{if(document.activeElement&&document.activeElement.tagName=='INPUT')return;keys[e.key.toLowerCase()]=0});addEventListener('blur',()=>{for(const k in keys)keys[k]=0});
 cv.addEventListener('pointerdown',e=>{if(!me)return;$('prof').style.display='none';const wx=e.clientX/S+cam.x,wy=e.clientY/S+cam.y;
- for(const p of Object.values(players))if(p.id!=myId&&Math.abs(wx-p.rx)<8&&wy>p.ry-24&&wy<p.ry+2){showProf(p,e.clientX,e.clientY);return}{const so=M.objects.find(o=>o.k=='statue');if(so&&wx>so.x*M.T-8&&wx<(so.x+3)*M.T+8&&wy>(so.y+2)*M.T-90&&wy<(so.y+2)*M.T){plaqueUntil=Date.now()+4000;return}}const st=(M.seats||[]).find(s=>Math.abs(s.x-wx)<9&&Math.abs(s.y-4-wy)<10);if(st&&Math.hypot(st.x-me.rx,st.y-me.ry)<48){send({t:'act',a:'sit',sx:st.x,sy:st.y});return}if(e.pointerType=='mouse'){if(e.button==0&&!dead){const ax=wx-me.rx,ay=wy-(me.ry-16);attack(Math.abs(ax)>Math.abs(ay)?(ax>0?3:2):(ay>0?0:1))}return}target={x:wx,y:wy}});
-function attack(d){if(d==null)d=me?me.dir:0;if(me){me.dir=d}send({t:'atk',dir:d})}
+ if(e.pointerType!='mouse'||e.shiftKey)for(const p of Object.values(players))if(p.id!=myId&&Math.abs(wx-p.rx)<8&&wy>p.ry-40&&wy<p.ry+2){showProf(p,e.clientX,e.clientY);return}{const so=M.objects.find(o=>o.k=='statue');if(so&&wx>so.x*M.T-8&&wx<(so.x+3)*M.T+8&&wy>(so.y+2)*M.T-90&&wy<(so.y+2)*M.T){plaqueUntil=Date.now()+4000;return}}const st=(M.seats||[]).find(s=>Math.abs(s.x-wx)<9&&Math.abs(s.y-4-wy)<10);if(st&&Math.hypot(st.x-me.rx,st.y-me.ry)<48){send({t:'act',a:'sit',sx:st.x,sy:st.y});return}if(e.pointerType=='mouse'){if(e.button==0&&!dead&&!e.shiftKey){fire(Math.atan2(wy-(me.ry-17),wx-me.rx))}return}target={x:wx,y:wy}});
+let lastFire=0;function fire(a){if(!me||dead)return;const now=Date.now();if(now-lastFire<350)return;lastFire=now;if(a==null)a=[Math.PI/2,-Math.PI/2,Math.PI,0][me.dir|0];me.aim=a;me.dir=dirOf(a);send({t:'atk',a})}
+function attack(){fire(null)}
+function dirOf(a){const c=Math.cos(a),s=Math.sin(a);return Math.abs(c)>Math.abs(s)?(c>0?3:2):(s>0?0:1)}
+let mouseAt=0;cv.addEventListener('pointermove',e=>{if(e.pointerType!='mouse'||!me)return;const wx=e.clientX/S+cam.x,wy=e.clientY/S+cam.y;me.aim=Math.atan2(wy-(me.ry-17),wx-me.rx);mouseAt=Date.now()});
 function doAct(a){if(a=='sit'){const s=nearSeat();if(s){send({t:'act',a:'sit',sx:s.x,sy:s.y});return}}send({t:'act',a})}
 function nearSeat(){if(!me||!M)return null;let b=null,bd=24;for(const s of M.seats){const d=Math.hypot(s.x-me.rx,s.y-me.ry);if(d<bd&&!Object.values(players).some(p=>p.act=='seat'&&p!==me&&Math.hypot(p.x-s.x,p.y-s.y)<2)){bd=d;b=s}}return b}
 function showProf(p,x,y){const d=$('prof');d.innerHTML='';const n=document.createElement('div');n.style.cssText='font-weight:bold;font-size:16px;margin-bottom:6px';n.textContent=dec(p.name);d.appendChild(n);
@@ -195,7 +208,8 @@ function update(){if(!me||!M||dead)return;let dx=(keys.d||keys.arrowright?1:0)-(
  const l=Math.hypot(dx,dy);me.moving=l>0;me.run=!!(running||keys.shift);if(l){dx/=l;dy/=l;const sp=(running||keys.shift)?2.6:1.5,nx=me.rx+dx*sp,ny=me.ry+dy*sp;let moved=false;
   if(!solid(nx,me.ry-2)){me.rx=nx;moved=true}if(!solid(me.rx,ny-2)){me.ry=ny;moved=true}if(!moved)target=null;
   me.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?3:2):(dy>0?0:1)}
- const now=Date.now();if(now-lastSend>50){const sig=[Math.round(me.rx*10),Math.round(me.ry*10),me.dir,me.moving,!!(running||keys.shift)].join();if(sig!==lastSig||now-lastSend>1000){lastSig=sig;lastSend=now;if(me.moving&&me.act)me.act='';send({t:'move',x:me.rx,y:me.ry,dir:me.dir,moving:me.moving,run:!!(running||keys.shift)})}}}
+ if(me.aim!=null&&Date.now()-mouseAt<4000)me.dir=dirOf(me.aim);
+ const now=Date.now();if(now-lastSend>50){const sig=[Math.round(me.rx*10),Math.round(me.ry*10),me.dir,me.moving,!!(running||keys.shift),Math.round((me.aim||0)*10)].join();if(sig!==lastSig||now-lastSend>1000){lastSig=sig;lastSend=now;if(me.moving&&me.act)me.act='';send({t:'move',x:me.rx,y:me.ry,dir:me.dir,moving:me.moving,run:!!(running||keys.shift),aim:me.aim})}}}
 let lastSig='';
 let showMini=innerWidth>=700,plaqueUntil=0;
 function loop(){tick++;update();ctx.fillStyle='#cfe6c0';ctx.fillRect(0,0,cv.width,cv.height);
@@ -205,6 +219,7 @@ function loop(){tick++;update();ctx.fillStyle='#cfe6c0';ctx.fillRect(0,0,cv.widt
   Render.drawAnims(ctx,B,cam,vw,vh,now);drawWeapons();
   const ps=Object.values(players).filter(p=>p.rx>cam.x-40&&p.rx<cam.x+vw+40&&p.ry>cam.y-40&&p.ry<cam.y+vh+60).sort((a,b)=>a.ry-b.ry);
   for(const p of ps){drawChar(p);for(const o of Render.occluders(B,p.rx-16,p.ry-34,p.rx+16,p.ry+4,p.ry+(p.act=='seat'?2:0)))ctx.drawImage(o.img,o.x-cam.x,o.y-cam.y)}
+  drawBullets();
   const ns=nearSeat();if(ns&&me&&me.act!='seat'&&!dead){ctx.fillStyle='#fff8ec';ctx.fillRect(ns.x-cam.x-14,ns.y-cam.y-26,28,9);ctx.strokeStyle='#8a6a4f';ctx.lineWidth=.6;ctx.strokeRect(ns.x-cam.x-14,ns.y-cam.y-26,28,9);ctx.fillStyle='#5f4b3a';ctx.font='7px sans-serif';ctx.textAlign='center';ctx.fillText('앉기 (1)',ns.x-cam.x,ns.y-cam.y-19)}
   ctx.restore();ps.forEach(p=>{if(!p.dieAt)drawLabels(p)});
   {const st=M.objects.find(o=>o.k=='statue');if(st){const sx=(st.x+1.5)*M.T,sy=(st.y+st.h)*M.T;if(plaqueUntil>now||(me&&Math.hypot(me.rx-sx,me.ry-sy)<60)){const X=(sx-cam.x)*S,Y=(sy+12-cam.y)*S;ctx.font='bold 14px system-ui';const t='🗿 일론 머스크 동상',w=ctx.measureText(t).width+20;
