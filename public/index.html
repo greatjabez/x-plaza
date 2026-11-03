@@ -57,6 +57,8 @@ const ab=document.createElement('button');ab.id='atk';ab.textContent='🔫 발�
 const cv=$('c'),ctx=cv.getContext('2d',{alpha:false});let S=3;
 function rs(){cv.width=innerWidth;cv.height=innerHeight;S=innerWidth<700?2:3;ctx.imageSmoothingEnabled=false}addEventListener('resize',rs);rs();
 let dead=0,running=false,waves={},M,ws,myId,players={},weapons={},bubbles={},swings={},me=null,keys={},target=null,cam={x:0,y:0},tick=0;
+const STATUE=new Image();STATUE.src='assets/statue.png';const STW=78;
+function drawStatue(B){const s=B.statue;if(!s||!STATUE.complete||!STATUE.naturalWidth)return;const h=STW*STATUE.naturalHeight/STATUE.naturalWidth;ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.fillStyle='rgba(70,110,30,.18)';ctx.beginPath();ctx.ellipse(s.x-cam.x+3,s.base-cam.y-1,STW*.42,4,0,0,7);ctx.fill();ctx.drawImage(STATUE,s.x-STW/2-cam.x,s.base-h-cam.y+2,STW,h);ctx.restore()}
 let B=null;M=MapGen();setTimeout(()=>{const t=performance.now();B=Render.bake(M);window.bakeMs=performance.now()-t;$('go').disabled=false;$('go').textContent='광장 입장!'},30);
 const SPC={};
 function shade(h,f){const n=parseInt(h.slice(1),16);const r=Math.min(255,(n>>16)*f|0),g=Math.min(255,(n>>8&255)*f|0),b=Math.min(255,(n&255)*f|0);return`rgb(${r},${g},${b})`}
@@ -189,7 +191,7 @@ addEventListener('keydown',e=>{if(e.isComposing||e.keyCode==229)return;if(docume
  if(!e.repeat&&NK[e.key])NK[e.key]();if(e.code=='Space'){if(!e.repeat)doAct('jump');e.preventDefault()}if(!['w','a','s','d','shift'].includes(K)&&!K.startsWith('arrow'))return;keys[e.key.toLowerCase()]=1;target=null});
 addEventListener('keyup',e=>{if(document.activeElement&&document.activeElement.tagName=='INPUT')return;keys[e.key.toLowerCase()]=0});addEventListener('blur',()=>{for(const k in keys)keys[k]=0});
 cv.addEventListener('pointerdown',e=>{if(!me)return;$('prof').style.display='none';const wx=e.clientX/S+cam.x,wy=e.clientY/S+cam.y;
- if(e.pointerType!='mouse'||e.shiftKey)for(const p of Object.values(players))if(p.id!=myId&&Math.abs(wx-p.rx)<8&&wy>p.ry-40&&wy<p.ry+2){showProf(p,e.clientX,e.clientY);return}{const so=M.objects.find(o=>o.k=='statue');if(so&&wx>so.x*M.T-8&&wx<(so.x+3)*M.T+8&&wy>(so.y+2)*M.T-90&&wy<(so.y+2)*M.T){plaqueUntil=Date.now()+4000;return}}const st=(M.seats||[]).find(s=>Math.abs(s.x-wx)<9&&Math.abs(s.y-4-wy)<10);if(st&&Math.hypot(st.x-me.rx,st.y-me.ry)<48){send({t:'act',a:'sit',sx:st.x,sy:st.y});return}if(e.pointerType=='mouse'){if(e.button==0&&!dead&&!e.shiftKey){fire(Math.atan2(wy-(me.ry-17),wx-me.rx))}return}target={x:wx,y:wy}});
+ if(e.pointerType!='mouse'||e.shiftKey)for(const p of Object.values(players))if(p.id!=myId&&Math.abs(wx-p.rx)<8&&wy>p.ry-40&&wy<p.ry+2){showProf(p,e.clientX,e.clientY);return}{const so=M.objects.find(o=>o.k=='statue');if(so&&wx>so.x*M.T-4&&wx<(so.x+so.w)*M.T+4&&wy>(so.y+2)*M.T-80&&wy<(so.y+2)*M.T){plaqueUntil=Date.now()+4000;return}}const st=(M.seats||[]).find(s=>Math.abs(s.x-wx)<9&&Math.abs(s.y-4-wy)<10);if(st&&Math.hypot(st.x-me.rx,st.y-me.ry)<48){send({t:'act',a:'sit',sx:st.x,sy:st.y});return}if(e.pointerType=='mouse'){if(e.button==0&&!dead&&!e.shiftKey){fire(Math.atan2(wy-(me.ry-17),wx-me.rx))}return}target={x:wx,y:wy}});
 let lastFire=0;function fire(a){if(!me||dead)return;const now=Date.now();if(now-lastFire<350)return;lastFire=now;if(a==null)a=[Math.PI/2,-Math.PI/2,Math.PI,0][me.dir|0];me.aim=a;me.dir=dirOf(a);send({t:'atk',a})}
 function attack(){fire(null)}
 function dirOf(a){const c=Math.cos(a),s=Math.sin(a);return Math.abs(c)>Math.abs(s)?(c>0?3:2):(s>0?0:1)}
@@ -218,11 +220,12 @@ function loop(){tick++;update();ctx.fillStyle='#cfe6c0';ctx.fillRect(0,0,cv.widt
   const now=Date.now();ctx.save();ctx.scale(S,S);ctx.drawImage(B.world,cam.x,cam.y,Math.ceil(vw)+1,Math.ceil(vh)+1,0,0,Math.ceil(vw)+1,Math.ceil(vh)+1);
   Render.drawAnims(ctx,B,cam,vw,vh,now);drawWeapons();
   const ps=Object.values(players).filter(p=>p.rx>cam.x-40&&p.rx<cam.x+vw+40&&p.ry>cam.y-40&&p.ry<cam.y+vh+60).sort((a,b)=>a.ry-b.ry);
-  for(const p of ps){drawChar(p);for(const o of Render.occluders(B,p.rx-16,p.ry-34,p.rx+16,p.ry+4,p.ry+(p.act=='seat'?2:0)))ctx.drawImage(o.img,o.x-cam.x,o.y-cam.y)}
+  let stDone=!B.statue;for(const p of ps){if(!stDone&&p.ry>B.statue.base){drawStatue(B);stDone=true}drawChar(p);for(const o of Render.occluders(B,p.rx-16,p.ry-34,p.rx+16,p.ry+4,p.ry+(p.act=='seat'?2:0)))ctx.drawImage(o.img,o.x-cam.x,o.y-cam.y)}
+  if(!stDone)drawStatue(B);
   drawBullets();
   const ns=nearSeat();if(ns&&me&&me.act!='seat'&&!dead){ctx.fillStyle='#fff8ec';ctx.fillRect(ns.x-cam.x-14,ns.y-cam.y-26,28,9);ctx.strokeStyle='#8a6a4f';ctx.lineWidth=.6;ctx.strokeRect(ns.x-cam.x-14,ns.y-cam.y-26,28,9);ctx.fillStyle='#5f4b3a';ctx.font='7px sans-serif';ctx.textAlign='center';ctx.fillText('앉기 (1)',ns.x-cam.x,ns.y-cam.y-19)}
   ctx.restore();ps.forEach(p=>{if(!p.dieAt)drawLabels(p)});
-  {const st=M.objects.find(o=>o.k=='statue');if(st){const sx=(st.x+1.5)*M.T,sy=(st.y+st.h)*M.T;if(plaqueUntil>now||(me&&Math.hypot(me.rx-sx,me.ry-sy)<60)){const X=(sx-cam.x)*S,Y=(sy+12-cam.y)*S;ctx.font='bold 14px system-ui';const t='🗿 일론 머스크 동상',w=ctx.measureText(t).width+20;
+  {const st=M.objects.find(o=>o.k=='statue');if(st){const sx=(st.x+st.w/2)*M.T,sy=(st.y+st.h)*M.T;if(plaqueUntil>now||(me&&Math.hypot(me.rx-sx,me.ry-sy)<60)){const X=(sx-cam.x)*S,Y=(sy+12-cam.y)*S;ctx.font='bold 14px system-ui';const t='🗿 일론 머스크 동상',w=ctx.measureText(t).width+20;
    ctx.fillStyle='#fff8ec';ctx.strokeStyle='#b8925a';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(X-w/2,Y-24,w,26,10);ctx.fill();ctx.stroke();ctx.fillStyle='#7a5a44';ctx.textAlign='center';ctx.fillText(t,X,Y-6)}}}
   if(showMini){const mw=innerWidth<700?150:220,mh=mw*B.H/B.W,mx=cv.width-mw-10,my=10;ctx.fillStyle='#fff8ec';ctx.strokeStyle='#8a6a4f';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(mx-6,my-6,mw+12,mh+26,12);ctx.fill();ctx.stroke();ctx.imageSmoothingEnabled=true;ctx.drawImage(B.mini,mx,my,mw,mh);ctx.imageSmoothingEnabled=false;
    const k=mw/B.W;ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(mx+cam.x*k,my+cam.y*k,vw*k,vh*k);

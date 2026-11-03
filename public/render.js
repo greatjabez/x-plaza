@@ -277,7 +277,7 @@ function bake(M){const T=M.T,W=M.MW*T,Hh=M.MH*T;const masks={};
   const seg=(ax,ay,bx,by)=>{const n=Math.max(Math.abs(bx-ax),Math.abs(by-ay));for(let i=0;i<=n;i++){const x=ax+(bx-ax)*i/n|0,y=ay+(by-ay)*i/n|0;fg.fillStyle='#c79a68';fg.fillRect(x,y-6,1,2);fg.fillRect(x,y-2,1,2);if(i%8==0){fg.fillStyle='#b0855a';fg.fillRect(x-1,y-9,3,10);fg.fillStyle='#dcb282';fg.fillRect(x-1,y-9,1,10)}}};
   const mx=(x0+x1)/2;seg(x0,y0,x1,y0);seg(x0,y0,x0,y1);seg(x1,y0,x1,y1);seg(x0,y1,mx-24,y1);seg(mx+24,y1,x1,y1);shade3D(fg,W,Hh,[110,80,50]);g.drawImage(fc,0,0)}}
  // static object sprites (sorted) + occluder index
- const objs=[];const cache={};const get=(key,f)=>cache[key]||(cache[key]=f());const anims=[];
+ const objs=[];let statue=null;const cache={};const get=(key,f)=>cache[key]||(cache[key]=f());const anims=[];
  M.objects.forEach(o=>{let s,bx,by;if(o.flat||o.k=='garden')return;const X=o.x*T,Y=o.y*T;
   switch(o.k){case 'tree':s=get('t'+o.v+o.pine,()=>treeSprite(o.v,o.pine));bx=X+8+o.jx;by=Y+14+o.jy;break;
    case 'bush':s=get('b'+o.v,()=>bushSprite(o.v));bx=X+8;by=Y+14;break;
@@ -290,7 +290,7 @@ function bake(M){const T=M.T,W=M.MW*T,Hh=M.MH*T;const masks={};
    case 'stall':s=get('st'+o.v,()=>stallSprite(o.v));bx=X;by=Y+o.h*T;break;
    case 'cart':s=get('ca'+o.v,()=>cartSprite(o.v));bx=X;by=Y+o.h*T;break;
    case 'plamp':s=get('plp',plampSprite);bx=X+8;by=Y+14;anims.push({k:'glow',x:bx,y:by-50});break;
-   case 'statue':s=get('stt',statueSprite);bx=X+24;by=Y+o.h*T;break;
+   case 'statue':statue={x:X+o.w*T/2,base:Y+o.h*T};return;
    case 'lamp':s=get('lp',lampSprite);bx=X+8;by=Y+14;anims.push({k:'glow',x:bx,y:by-34});break;
    case 'bench':case 'benchv':{const inP=Math.hypot(o.x-M.plaza.cx,o.y-M.plaza.cy)<M.plaza.r;s=get((inP?'cb':'bn')+o.v,()=>inP?cbenchSprite(o.v):benchSprite(o.v))};bx=X;by=Y+(o.v==1?3:o.v==0?-1:1);break;
    case 'log':case 'logv':s=get('lg'+(o.k=='logv'),()=>logSprite(o.k=='logv'));bx=X;by=Y+(o.k=='logv'?1:(o.v==1?1:-1));break;
@@ -312,7 +312,7 @@ function bake(M){const T=M.T,W=M.MW*T,Hh=M.MH*T;const masks={};
  const boats=[{t:0,s:.00002,c:'#e87878'},{t:.5,s:-.000016,c:'#78a8e0'}];
  // minimap
  const [mc,mg]=C(240,180);mg.imageSmoothingEnabled=true;mg.drawImage(wc,0,0,240,180);
- return{world:wc,ground:gc,objs,grid,GS,anims,sp,boats,mini:mc,W,H:Hh,river:M.river}}
+ return{statue,world:wc,ground:gc,objs,grid,GS,anims,sp,boats,mini:mc,W,H:Hh,river:M.river}}
 function drawAnims(ctx,B,cam,vw,vh,now){const vis=(x,y,m=40)=>x>cam.x-m&&y>cam.y-m&&x<cam.x+vw+m&&y<cam.y+vh+m;
  ctx.fillStyle='#ffffff';for(const s of B.sp){if(!vis(s[0],s[1]))continue;const ph=(now/900+s[2])%4;if(ph<2.6)ctx.fillRect(s[0]-cam.x,s[1]-cam.y,1,1);else if(ph<3){ctx.fillRect(s[0]-cam.x-1,s[1]-cam.y,3,1);ctx.fillRect(s[0]-cam.x,s[1]-cam.y-1,1,3)}}
  // boats along river

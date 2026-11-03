@@ -12,7 +12,7 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const EMO=['👋','😂','❤️','😮','😡','🎉'];
 const srv=http.createServer((q,s)=>{
  const f=path.join(__dirname,'public',q.url=='/'?'index.html':path.normalize(q.url).replace(/^(\.\.[\/\\])+/,''));
- fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':f.endsWith('.html')?'text/html; charset=utf-8':'application/javascript'});s.end(d)})});
+ fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);return s.end()}s.writeHead(200,{'content-type':f.endsWith('.html')?'text/html; charset=utf-8':f.endsWith('.png')?'image/png':f.endsWith('.json')?'application/json':'application/javascript','cache-control':'no-cache'});s.end(d)})});
 const wss=new WebSocketServer({server:srv});
 const bc=o=>{const m=JSON.stringify(o);wss.clients.forEach(c=>c.readyState==1&&c.send(m))};
 function spawnPos(){for(let i=0;i<500;i++){const a=Math.random()*6.283,r=Math.random()*6*T,x=MAP.spawn.x+Math.cos(a)*r,y=MAP.spawn.y+Math.sin(a)*r*.6;if(!solid(x,y)&&!solid(x-6,y)&&!solid(x+6,y))return{x,y}}return{...MAP.spawn}}
