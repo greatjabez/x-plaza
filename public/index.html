@@ -18,11 +18,12 @@ button:hover{background:#fbe6ec}button:active{transform:translateY(1px);box-shad
 #mm button{font-size:13px!important;padding:6px 6px;display:flex;justify-content:space-between;align-items:center;background:#e8f3df}#mm small{opacity:.7;font-size:10px;margin-left:4px}#mm button.on{background:#f9d9a8}
 @media(max-width:700px){#emo button{font-size:15px;padding:2px 6px}#mm{width:204px}}
 #atk{background:#f4c0c0!important}#prof{position:fixed;display:none;z-index:8}.err{color:#d0607a;font-size:12px}
-</style></head><body>
+#music{position:fixed;left:10px;top:44px;z-index:6;display:none;align-items:center;gap:6px;background:rgba(255,248,236,.9);border:2px solid #8a6a4f;border-radius:14px;padding:3px 8px;font-size:12px;color:#7a5a44}#music button{background:none;border:none;font-size:16px;cursor:pointer;padding:0 2px}#music.off button{opacity:.4;text-decoration:line-through}#mvol{width:80px;accent-color:#e89aae}#ytwrap{position:fixed;left:-400px;top:0;width:200px;height:113px;overflow:hidden;opacity:0;pointer-events:none}</style></head><body>
 <canvas id="c"></canvas>
 <div id="hud">🌲 엑스광장 · 접속자 <b id="on">0</b>명 · <span id="me"></span></div>
 <div id="chat"><div id="log"></div><input id="ci" maxlength="80" placeholder="Enter로 채팅..."></div>
 <div id="emo"></div>
+<div id="music"><button id="mbtn" title="음악 켜기/끄기">🎵</button><input id="mvol" type="range" min="0" max="100" title="볼륨"><span id="mmsg"></span></div><div id="ytwrap"><div id="ytp"></div></div>
 <div id="prof" class="card" style="width:200px;padding:12px"></div>
 <div id="join" class="ov"><div class="card"><h1>🌲 엑스광장 🔥</h1>
 <label>닉네임</label><input id="nm" maxlength="12" placeholder="이름을 입력하세요">
@@ -59,6 +60,17 @@ function rs(){cv.width=innerWidth;cv.height=innerHeight;S=innerWidth<700?2:3;ctx
 let dead=0,running=false,waves={},M,ws,myId,players={},weapons={},bubbles={},swings={},me=null,keys={},target=null,cam={x:0,y:0},tick=0;
 const STATUE=new Image();STATUE.src='assets/statue.png';const STW=78;
 function drawStatue(B){const s=B.statue;if(!s||!STATUE.complete||!STATUE.naturalWidth)return;const h=STW*STATUE.naturalHeight/STATUE.naturalWidth;ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.fillStyle='rgba(70,110,30,.18)';ctx.beginPath();ctx.ellipse(s.x-cam.x+3,s.base-cam.y-1,STW*.42,4,0,0,7);ctx.fill();ctx.drawImage(STATUE,s.x-STW/2-cam.x,s.base-h-cam.y+2,STW,h);ctx.restore()}
+const MUSIC_ID='JD-kMIpDfnY';let ytp=null,ytReady=false,musicStarted=false;let mVol=+(localStorage.getItem('xp_vol')??20),mMute=localStorage.getItem('xp_mute')=='1';window.musicLog=[];
+function mApply(){$('mvol').value=mVol;$('music').classList.toggle('off',mMute);if(ytp&&ytReady){ytp.setVolume(mVol);mMute?ytp.mute():ytp.unMute()}}
+function mFail(){$('mmsg').textContent='음악을 불러올 수 없어요';$('music').classList.add('off')}
+function startMusic(){if(musicStarted)return;musicStarted=true;$('music').style.display='flex';mApply();
+ window.onYouTubeIframeAPIReady=()=>{try{ytp=new YT.Player('ytp',{width:200,height:113,videoId:MUSIC_ID,playerVars:{autoplay:1,loop:1,playlist:MUSIC_ID,controls:0,playsinline:1,rel:0},
+  events:{onReady:e=>{ytReady=true;musicLog.push('ready');mApply();e.target.playVideo()},onStateChange:e=>{musicLog.push('state'+e.data);if(e.data==0){ytp.seekTo(0);ytp.playVideo()}},onError:e=>{musicLog.push('error'+e.data);mFail()}}})}catch(err){mFail()}};
+ const sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';sc.onerror=()=>{musicLog.push('apifail');mFail()};document.head.appendChild(sc)}
+$('mbtn').onclick=e=>{mMute=!mMute;localStorage.setItem('xp_mute',mMute?'1':'0');mApply();if(!mMute&&ytp&&ytReady)ytp.playVideo();e.currentTarget.blur()};
+$('mvol').oninput=e=>{mVol=+e.target.value;localStorage.setItem('xp_vol',mVol);if(mVol>0&&mMute){mMute=false;localStorage.setItem('xp_mute','0')}mApply()};
+['change','pointerup'].forEach(ev=>$('mvol').addEventListener(ev,e=>e.target.blur()));
+$('music').addEventListener('keydown',e=>e.stopPropagation());
 let B=null;M=MapGen();setTimeout(()=>{const t=performance.now();B=Render.bake(M);window.bakeMs=performance.now()-t;$('go').disabled=false;$('go').textContent='광장 입장!'},30);
 const SPC={};
 function shade(h,f){const n=parseInt(h.slice(1),16);const r=Math.min(255,(n>>16)*f|0),g=Math.min(255,(n>>8&255)*f|0),b=Math.min(255,(n&255)*f|0);return`rgb(${r},${g},${b})`}
@@ -152,14 +164,21 @@ function drawLabels(p){const X=(p.rx-cam.x)*S,Y=(p.ry-cam.y)*S;ctx.save();ctx.se
  const n=dec(p.name);const w=ctx.measureText(n).width;ctx.fillStyle='rgba(255,248,236,.92)';ctx.strokeStyle='#8a6a4f';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(X-w/2-5-(p.handle?8:0),Y-50*S-15,w+10+(p.handle?16:0),17,8);ctx.fill();ctx.stroke();
  ctx.fillStyle=p.id==myId?'#d0607a':'#5f4b3a';ctx.fillText(n,X+(p.handle?8:0),Y-50*S-2);
  if(p.handle){const bx=X-w/2-8;ctx.fillStyle='#000';ctx.fillRect(bx-6,Y-50*S-13,12,12);ctx.fillStyle='#fff';ctx.font='bold 10px system-ui';ctx.fillText('𝕏',bx,Y-50*S-3)}
- const b=bubbles[p.id];if(b&&b.until>Date.now()){ctx.font=b.emo?'28px system-ui':'14px system-ui';const t=b.emo?b.text:dec(b.text);const bw=Math.min(220,ctx.measureText(t).width)+14,by=Y-50*S-24-(b.emo?36:22);
-  ctx.fillStyle='#fffdf6';ctx.strokeStyle='#8a6a4f';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(X-bw/2,by,bw,b.emo?36:22,10);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(X-4,by+(b.emo?36:22)-1);ctx.lineTo(X,by+(b.emo?36:22)+5);ctx.lineTo(X+4,by+(b.emo?36:22)-1);ctx.fill();
-  ctx.fillStyle='#5f4b3a';ctx.fillText(t,X,by+(b.emo?29:16),220)}ctx.restore()}
+ const L=(bubbles[p.id]||[]).filter(b=>b.until>Date.now());bubbles[p.id]=L;let by=Y-50*S-22;
+ for(let i=L.length-1;i>=0;i--){const b=L[i],t=b.emo?b.text:dec(b.text);ctx.font=b.emo?'26px system-ui':'14px system-ui';
+  const lines=[];if(b.emo)lines.push(t);else{let cur='';for(const ch of [...t]){if(ctx.measureText(cur+ch).width>190&&cur){lines.push(cur);cur=''}cur+=ch}if(cur)lines.push(cur)}
+  const lh=b.emo?30:18,bh=lines.length*lh+(b.emo?6:6),bw=Math.max(...lines.map(l=>ctx.measureText(l).width))+16;const life=b.until-Date.now();ctx.globalAlpha=Math.min(1,life/300,(Date.now()-b.at)/120+.2);
+  const top=by-bh-(i==L.length-1?6:0);ctx.fillStyle='#fffdf6';ctx.strokeStyle='#8a6a4f';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(X-bw/2,top,bw,bh,10);ctx.fill();ctx.stroke();
+  if(i==L.length-1){ctx.beginPath();ctx.moveTo(X-4,top+bh-1);ctx.lineTo(X,top+bh+5);ctx.lineTo(X+4,top+bh-1);ctx.fill()}
+  ctx.fillStyle='#5f4b3a';lines.forEach((l,j)=>ctx.fillText(l,X,top+(b.emo?29:15)+j*lh));by=top-4}
+ ctx.globalAlpha=1;ctx.restore()}
 function drawWeapons(){for(const w of Object.values(weapons)){const X=w.x-cam.x,Y=w.y-cam.y+Math.sin(tick/10)*1.5;ctx.fillStyle='rgba(255,255,150,.3)';ctx.fillRect(X-6,Y-6,12,12);
  ctx.fillStyle=w.kind=='axe'?'#bbb':'#d0a870';ctx.fillRect(X-1,Y-6,2,9);if(w.kind=='axe')ctx.fillRect(X+1,Y-6,4,4);ctx.fillStyle='#5a3a1a';ctx.fillRect(X-3,Y+2,6,2)}}
 const solid=(px,py)=>{const x=Math.floor(px/M.T),y=Math.floor(py/M.T);if(x<0||y<0||x>=M.MW||y>=M.MH)return true;return !!M.solid[y*M.MW+x]};
 function log(text,cls,who){const d=document.createElement('div');if(cls)d.className=cls;if(who){const b=document.createElement('b');b.textContent=who+': ';d.appendChild(b)}d.appendChild(document.createTextNode(text));$('log').appendChild(d);$('log').scrollTop=1e9;if($('log').children.length>100)$('log').firstChild.remove()}
+function addBubble(id,text,emo,ttl){const L=bubbles[id]||(bubbles[id]=[]);const now=Date.now();L.push({text,emo,at:now,until:now+ttl});while(L.length>3)L.shift()}
 function send(o){ws&&ws.readyState==1&&ws.send(JSON.stringify(o))}
+$('go').addEventListener('click',()=>startMusic());
 $('go').onclick=()=>{let h=$('hd').value.trim().replace(/^@/,'');if(h&&!/^[A-Za-z0-9_]{1,15}$/.test(h)){$('he').textContent='X 핸들은 영문/숫자/_ 1~15자예요';return}
  const name=$('nm').value.trim()||'여행자';ws=new WebSocket((location.protocol=='https:'?'wss://':'ws://')+location.host);
  ws.onopen=()=>send({t:'join',name,look,handle:h});
@@ -168,15 +187,15 @@ $('go').onclick=()=>{let h=$('hd').value.trim().replace(/^@/,'');if(h&&!/^[A-Za-
   else if(m.t=='state'){$('on').textContent=m.online;const seen={};m.players.forEach(p=>{seen[p.id]=1;const o=players[p.id];
    if(p.id==myId){if(!me){me={...p,rx:p.x,ry:p.y}}me.hp=p.hp;me.weapon=p.weapon;me.act=p.act;me.name=p.name;me.handle=p.handle;me.look=p.look;players[p.id]=me}
    else{const q=Object.assign(o||{rx:p.x,ry:p.y},p);if(p.dead&&!q.dieAt)q.dieAt=Date.now();players[p.id]=q}});for(const id in players)if(!seen[id])delete players[id]}
-  else if(m.t=='chat'){log(m.text,'',m.name);bubbles[m.id]={text:m.text,until:Date.now()+5000}}
-  else if(m.t=='emo'){bubbles[m.id]={text:m.e,emo:1,until:Date.now()+3000}}
+  else if(m.t=='chat'){log(m.text,'',m.name);addBubble(m.id,m.text,0,3000)}
+  else if(m.t=='emo'){addBubble(m.id,m.e,1,3000)}
   else if(m.t=='sys')log(m.text,'s');
   else if(m.t=='wpick'){delete weapons[m.id];if(m.pid==myId)log('총알이 강해졌어요! 마우스 왼쪽 클릭으로 발사 🔫','s')}
   else if(m.t=='weapons'){weapons={};m.weapons.forEach(w=>weapons[w.id]=w)}
-  else if(m.t=='wave'){const P=players[m.id];if(P)P.waveUntil=Date.now()+1500;bubbles[m.id]={text:'안녕! 👋',until:Date.now()+2000}}
+  else if(m.t=='wave'){const P=players[m.id];if(P)P.waveUntil=Date.now()+1500;addBubble(m.id,'안녕! 👋',0,2500)}
   else if(m.t=='shot'){const P=players[m.id];if(P){P.shotAt=Date.now();if(m.id!=myId)P.aim=m.a}shots[m.b]={x:m.x,y:m.y,vx:m.vx,vy:m.vy,t:Date.now()}}
   else if(m.t=='bend'){if(shots[m.b])shots[m.b].end=1;pops[m.b]={x:m.x,y:m.y,t:Date.now()}}
-  else if(m.t=='act'){const P=players[m.id];if(!P)return;if(m.a=='jump')P.jumpUntil=Date.now()+600;else{P.act=m.a;const B={sleep:'💤',cry:'😭',angry:'💢',dance:'🎶'}[m.a];if(B)bubbles[m.id]={text:B,emo:1,until:Date.now()+2500}}}
+  else if(m.t=='act'){const P=players[m.id];if(!P)return;if(m.a=='jump')P.jumpUntil=Date.now()+600;else{P.act=m.a;const B={sleep:'💤',cry:'😭',angry:'💢',dance:'🎶'}[m.a];if(B)addBubble(m.id,B,1,2500)}}
   else if(m.t=='seated'){if(me){me.rx=m.x;me.ry=m.y;me.dir=m.dir;me.act='seat';target=null}}
   else if(m.t=='die'){const P=players[m.id];if(P)P.dieAt=Date.now()}
   else if(m.t=='hit'){const P=players[m.id];if(P){P.hitUntil=Date.now()+300;if(m.id==myId){me.rx+=m.kx||0;me.ry+=m.ky||0}}}
