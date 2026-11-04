@@ -32,7 +32,7 @@ wss.on('connection',ws=>{let me=null,last={chat:0,emo:0,atk:0,mv:0},msgs=0,win=D
    me.x=x;me.y=y;me.dir=m.dir|0;me.moving=!!m.moving;if(isFinite(+m.aim))me.aim=Math.round(+m.aim*100)/100;me.run=!!m.run;
    for(const w of weapons.values())if(!me.weapon&&Math.hypot(w.x-me.x,w.y-me.y)<14){me.weapon=w.kind;weapons.delete(w.id);bc({t:'wpick',id:w.id,pid:me.id});setTimeout(()=>{spawnWeapon();bc({t:'weapons',weapons:[...weapons.values()]})},15000)}}
   else if(m.t=='chat'){if(now-last.chat<700)return;last.chat=now;const text=String(m.text||'').replace(/[\u0000-\u001f]/g,'').slice(0,80).trim();if(text)bc({t:'chat',id:me.id,name:me.name,text})}
-  else if(m.t=='act'){if(now-last.emo<300)return;last.emo=now;const a=String(m.a);if(!['sit','sleep','lie','dance','cry','angry','jump'].includes(a))return;
+  else if(m.t=='act'){if(now-last.emo<300)return;last.emo=now;const a=String(m.a);if(!['sit','sleep','lie','dance','cry','angry','jump','clap'].includes(a))return;
    if(a=='jump'){bc({t:'act',id:me.id,a});return}
    if(me.seat>=0){seats[me.seat].occ=0;me.seat=-1}
    if(a=='sit'){let best=-1,bd=1e9;const qx=isFinite(+m.sx)?+m.sx:me.x,qy=isFinite(+m.sy)?+m.sy:me.y;

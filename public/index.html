@@ -60,7 +60,7 @@ const mt=document.createElement('button');mt.textContent='🎭 모션';mt.style.
 function toggleRun(){running=!running;document.querySelectorAll('#mm button').forEach(b=>{if(b.textContent.includes('달리기'))b.classList.toggle('on',running)})}
 const mm=document.createElement('div');mm.id='mm';$('emo').appendChild(mm);mt.onclick=()=>mm.classList.toggle('open');
 [['🪑 앉기','1',()=>doAct('sit')],['💤 자기','2',()=>doAct('sleep')],['🛌 눕기','3',()=>doAct('lie')],['🏃 달리기','4/Shift',()=>toggleRun()],
- ['⤴️ 점프','5/Space',()=>doAct('jump')],['🙋 인사','6',()=>send({t:'wave'})],['💃 춤추기','7',()=>doAct('dance')],['😭 울기','8',()=>doAct('cry')],['💢 화내기','9',()=>doAct('angry')]].forEach(([l,k,f])=>{
+ ['⤴️ 점프','5/Space',()=>doAct('jump')],['🙋 인사','6',()=>send({t:'wave'})],['💃 춤추기','7',()=>doAct('dance')],['😭 울기','8',()=>doAct('cry')],['💢 화내기','9',()=>doAct('angry')],['👏 박수','-',()=>doAct('clap')]].forEach(([l,k,f])=>{
  const b=document.createElement('button');b.innerHTML='';b.append(l);const s=document.createElement('small');s.textContent=k;b.appendChild(s);b.onclick=e=>{f(e);if(innerWidth<700&&k!='4/Shift')mm.classList.remove('open')};mm.appendChild(b)});
 const WEAPONS=false; // weapons disabled for now; set true (and server WEAPONS) to restore
 if(WEAPONS){const ab=document.createElement('button');ab.id='atk';ab.textContent='🔫 발사';ab.title='마우스 왼쪽 클릭 / 0';ab.onclick=()=>attack();$('emo').appendChild(ab)}
@@ -97,14 +97,13 @@ function poseOf(p,now,t,dir,act){const side=dir==2||dir==3;let ll=0,lr=0,bob=0,a
    if(side){str=sg*[1,2,3][ph];arm=sg*[1,2,2][ph];lean=-2;ll=ph==2?1:0}else{ll=sg>0?[0,1,2][ph]:0;lr=sg<0?[0,1,2][ph]:0;arm=sg*[1,2,2][ph]}}
   else{const f=Math.floor(now/95)%6;if(side){str=WSTR[f];arm=WARM[f];lean=-1}else{ll=WLL[f];lr=WLR[f];arm=WARM[f]}bob=WBOB[f];yo=(f==2||f==5)?-1:0;sy=WBOB[f]?.97:1}}
  else if(!act){const f=Math.floor(t/420)%4;bob=[0,0,1,1][f]}
- if(act=='dance'){const f=Math.floor(now/220)%4;dir=[0,3,0,2][f];anim=f%2?'wave':'';yo=f%2?-2:0;ll=f==1?1:0;lr=f==3?1:0}
- if(act=='angry')anim=Math.floor(now/150)%2?'fwd':'';
+ if(act=='dance'){const f=Math.floor(now/220)%4;dir=[0,3,0,2][f];anim='';yo=f%2?-2:0;ll=f==1?1:0;lr=f==3?1:0}
  if(act=='cry')yo=Math.floor(now/300)%2;
- if(p.waveUntil>now){const f=((p.waveUntil-now)/130|0)%4;anim=['wave','wave2','wave','up0'][f];if(anim=='up0')anim='wave2';bob=0}
+ if(p.waveUntil>now){const f=((p.waveUntil-now)/130|0)%4;anim='';bob=0}
  if(p.shotAt&&now-p.shotAt<140){const k=(now-p.shotAt)/140;bob=k<.4?1:0;if(side)lean=k<.4?1:0}
  if(p.jumpUntil>now){const k=1-(p.jumpUntil-now)/600;ll=lr=str=0;arm=0;
   if(k<.15){bob=2;sh=1.15;sy=.92;sx=1.05;flare=1}else if(k>.85){bob=k>.93?1:2;sh=1.15;sy=.92;sx=1.05;flare=1}
-  else{const q=(k-.15)/.7,h=Math.sin(Math.PI*q)*14;yo=-Math.round(h);sh=1-h/22;if(q<.4||q>.75){ll=lr=1}else{anim=side?'':'wave'}if(side&&q<.5)lean=-1}}
+  else{const q=(k-.15)/.7,h=Math.sin(Math.PI*q)*14;yo=-Math.round(h);sh=1-h/22;if(q<.4||q>.75){ll=lr=1}if(side&&q<.5)lean=-1}}
  return{dir,yo,sh,sx,sy,P:[ll,lr,bob,arm,str,lean,anim,flare?1:0].join()}}
 const WH=new WeakMap();function white(sp){if(WH.has(sp))return WH.get(sp);const w=document.createElement('canvas');w.width=sp.width;w.height=sp.height;const g=w.getContext('2d');g.drawImage(sp,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#fff';g.fillRect(0,0,sp.width,sp.height);WH.set(sp,w);return w}
 
@@ -117,6 +116,21 @@ const shots={};
 function drawBullets(){const now=Date.now();for(const k in shots){const b=shots[k],t=(now-b.t)/33;if(t>42||b.end&&now>b.end){delete shots[k];continue}if(b.end)continue;const x=b.x+b.vx*t-cam.x,y=b.y+b.vy*t-cam.y;ctx.fillStyle='#1c2646';ctx.fillRect(Math.round(x)-2,Math.round(y)-2,4,4);ctx.fillStyle='#fff3a8';ctx.fillRect(Math.round(x)-1,Math.round(y)-1,2,2);ctx.fillStyle='rgba(255,240,170,.5)';ctx.fillRect(Math.round(x-b.vx*.6)-1,Math.round(y-b.vy*.6)-1,2,2)}
  for(const k in pops){const q=pops[k],t=now-q.t;if(t>200){delete pops[k];continue}const r=2+t/40|0;ctx.fillStyle='rgba(255,246,200,'+(1-t/200)+')';ctx.fillRect(q.x-cam.x-r,q.y-cam.y-1,r*2,2);ctx.fillRect(q.x-cam.x-1,q.y-cam.y-r,2,r*2)}}
 const pops={};
+// Painted emote frames (assets/emotes.png). Drawn for the default concept boy only; every other look keeps its own sprite (no overlay arm).
+const PEM={img:new Image(),m:null};PEM.img.src='assets/emotes.png';fetch('assets/emotes.json').then(r=>r.json()).then(j=>PEM.m=j);const EK=0.92;
+function emoBoy(L){return L[0]==0&&L[1]==0&&L[2]==0&&L[3]==0&&!L[4]}
+function emoIdx(e,el){const ms=e.ms,n=ms.length,tot=ms.reduce((a,b)=>a+b,0);let s0=0,t=el;
+ if(e.loop<0){t=Math.min(Math.max(t,0),tot-1)}else{let intro=0;for(let i=0;i<e.loop;i++)intro+=ms[i];if(t>=intro){s0=e.loop;const cyc=tot-intro;t=intro+((t-intro)%cyc)}}
+ let acc=0;for(let i=0;i<n;i++){acc+=ms[i];if(t<acc)return e.f[Math.max(i,s0)]}return e.f[n-1]}
+function paintedEmote(p,now,act,dir){if(!PEM.m||!PEM.img.complete||!PEM.img.naturalWidth)return null;const L=p.look||[0,0,0,0,0];if(!emoBoy(L)||p.dieAt)return null;
+ if(p._ea!==act){p._ea=act;p._et=now}const el=now-p._et;
+ if(p.createAt!=null)return{n:'create',f:emoIdx(PEM.m.emotes.create,(now-p.createAt)*1.5)};
+ if(p.waveUntil>now)return{n:'wave',f:emoIdx(PEM.m.emotes.wave,1500-(p.waveUntil-now))};
+ if(act=='dance'||act=='clap')return{n:act,f:emoIdx(PEM.m.emotes[act],el)};
+ if(act=='sit'||act=='seat'){const sd=dir==2||dir==3;return{n:sd?'sitS':'sitF',f:emoIdx(PEM.m.emotes[sd?'sitS':'sitF'],el),flip:dir==3}}
+ return null}
+function drawPainted(g,X,Y,pe,xo){const m=PEM.m,fw=m.fw,fh=m.fh,i=pe.f,sx=(i%m.cols)*fw,sy=(i/m.cols|0)*fh,w=fw*EK,h=fh*EK;
+ g.save();g.translate(X+xo,Y+1);if(pe.flip)g.scale(-1,1);g.drawImage(PEM.img,sx,sy,fw,fh,-m.cx*EK,-m.feet*EK,w,h);g.restore()}
 function drawCharAt(g,X,Y,p,now){const L=p.look||[0,0,0,0,0],id=p.id||0,act=p.act||'',t=now+id*977;let xo=0,rot=0,sit=false;
  const bl=act=='sleep'||act=='cry'||(t%3200)<130;
  let{dir,yo,sh,sx,sy,P}=poseOf(p,now,t,p.dir||0,act);
@@ -129,6 +143,8 @@ function drawCharAt(g,X,Y,p,now){const L=p.look||[0,0,0,0,0],id=p.id||0,act=p.ac
  const sp=sprite(L,dir,P,'',bl||p.dieAt),img=p.hitUntil>now&&Math.floor(now/60)%2?white(sp):sp;
  {const sw=(rot?13:8)*sh,gr=g.createRadialGradient(X,Y+1,0,X,Y+1,sw);gr.addColorStop(0,'rgba(40,40,30,.16)');gr.addColorStop(1,'rgba(40,40,30,0)');g.save();g.fillStyle=gr;g.beginPath();g.ellipse(X,Y+1,sw,sw*.38,0,0,7);g.fill();g.restore()}
 
+ const pe=!rot?paintedEmote(p,now,act,p.dir||0):null;
+ if(pe){const _s=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';drawPainted(g,X,Y,pe,xo);g.imageSmoothingEnabled=_s;return{yo:0,rot:0,sit:pe.n.startsWith('sit')}}
  const gb=(dir==1)&&!rot&&!sit;if(gb&&WEAPONS)drawGun(g,X+xo,Y,p,now,yo);
  const _sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
  if(rot){g.save();g.translate(X+xo,Y-6);g.rotate(rot);g.drawImage(img,-18.67,-36,37.33,44);g.restore()}
@@ -145,7 +161,7 @@ function elev(p){if(!M||p.lie)return 0;const T=M.T,tx=p.rx/T,ty=p.ry/T,q=M.shrin
 const snap=v=>Math.round(v*S)/S;// snap to screen pixels (not world pixels) so characters don't jitter against the camera
 function drawChar(p){const now=Date.now(),X=snap(p.rx-cam.x),Y=snap(p.ry-elev(p)-cam.y);const r=drawCharAt(ctx,X,Y,p,now);
  if(p.dieAt||!WEAPONS)return;const hy=r.rot?Y-22:r.sit?Y-40:Y-47;ctx.fillStyle='#5f4b3a';ctx.fillRect(X-9,hy,18,3);ctx.fillStyle='#fff3e0';ctx.fillRect(X-8,hy+1,16,1);ctx.fillStyle=p.hp>50?'#8fd08a':p.hp>25?'#f4d28a':'#f09a9a';ctx.fillRect(X-8,hy+1,16*p.hp/100,1)}
-const pvs=[$('pv').getContext('2d'),$('pv2').getContext('2d')];setInterval(()=>{const n=Date.now(),ph=(n/2000|0)%4;pvs.forEach(pv=>{if(!pv.canvas.offsetParent)return;pv.setTransform(1,0,0,1,0,0);pv.clearRect(0,0,96,144);pv.setTransform(3,0,0,3,0,0);drawCharAt(pv,16,45,{look,dir:[0,2,1,0][ph],id:1,moving:ph==1||ph==2,waveUntil:ph==3?n+100:0},n)})},90);
+const pvs=[$('pv').getContext('2d'),$('pv2').getContext('2d')];setInterval(()=>{const n=Date.now(),ph=(n/2000|0)%4;pvs.forEach(pv=>{if(!pv.canvas.offsetParent)return;pv.setTransform(1,0,0,1,0,0);pv.clearRect(0,0,96,144);pv.setTransform(3,0,0,3,0,0);drawCharAt(pv,16,45,{look,dir:[0,2,1,0][ph],id:1,moving:ph==1||ph==2,createAt:ph==3?n-(n%2000):null},n)})},90);
 $('dressBtn').onclick=e=>{const d=$('dress');d.style.display=d.style.display=='block'?'none':'block';e.currentTarget.blur()};$('dressX').onclick=()=>{$('dress').style.display='none'};$('dress').addEventListener('keydown',e=>e.stopPropagation());
 function drawLabels(p){const X=(p.rx-cam.x)*S,Y=(p.ry-elev(p)-cam.y)*S;ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.font='bold 12px system-ui';ctx.textAlign='center';
  const n=dec(p.name);const w=ctx.measureText(n).width;ctx.fillStyle='rgba(255,248,236,.92)';ctx.strokeStyle='#8a6a4f';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(X-w/2-5-(p.handle?8:0),Y-50*S-15,w+10+(p.handle?16:0),17,8);ctx.fill();ctx.stroke();
@@ -195,7 +211,7 @@ let ciComp=false;$('ci').addEventListener('compositionstart',()=>ciComp=true);$(
 addEventListener('keydown',e=>{if(e.isComposing||e.keyCode==229)return;if(document.activeElement==$('ci')){if(e.key=='Enter'&&!ciComp){const t=$('ci').value.trim();if(t)send({t:'chat',text:t});$('ci').value='';$('ci').blur()}if(e.key=='Escape')$('ci').blur();return}
  if(!myId||document.activeElement.tagName=='INPUT')return;if(e.key=='Enter'){$('ci').focus();e.preventDefault();return}
  const K=e.key.toLowerCase();if(K=='m'){showMini=!showMini;return}if(K=='c'&&!e.ctrlKey&&!e.metaKey&&!e.repeat){chatTog();return}const EK='zxhvbn'.indexOf(K);if(EK>=0&&!e.ctrlKey&&!e.metaKey)send({t:'emo',i:EK});
- const NK={'1':()=>doAct('sit'),'2':()=>doAct('sleep'),'3':()=>doAct('lie'),'4':()=>toggleRun(),'5':()=>doAct('jump'),'6':()=>send({t:'wave'}),'7':()=>doAct('dance'),'8':()=>doAct('cry'),'9':()=>doAct('angry'),'0':()=>{if(WEAPONS)attack()}};
+ const NK={'1':()=>doAct('sit'),'2':()=>doAct('sleep'),'3':()=>doAct('lie'),'4':()=>toggleRun(),'5':()=>doAct('jump'),'6':()=>send({t:'wave'}),'7':()=>doAct('dance'),'8':()=>doAct('cry'),'9':()=>doAct('angry'),'-':()=>doAct('clap'),'0':()=>{if(WEAPONS)attack()}};
  if(!e.repeat&&NK[e.key])NK[e.key]();if(e.code=='Space'){if(!e.repeat)doAct('jump');e.preventDefault()}if(!['w','a','s','d','shift'].includes(K)&&!K.startsWith('arrow'))return;keys[e.key.toLowerCase()]=1;target=null});
 addEventListener('keyup',e=>{if(document.activeElement&&document.activeElement.tagName=='INPUT')return;keys[e.key.toLowerCase()]=0});addEventListener('blur',()=>{for(const k in keys)keys[k]=0});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
