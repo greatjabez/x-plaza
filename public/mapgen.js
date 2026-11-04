@@ -31,7 +31,7 @@ const bridges=[];paths.forEach(p=>{for(let i=0;i<p.pts.length-1;i++){const a=p.p
 const pv={cx:89,cy:68.1,s:.2,ic:[370,470],irx:4.1,iry:2.0,prx:8,pry:5,ang:1.054};
 {const k=bridges.findIndex(b=>Math.abs(b.x-pv.cx)<3&&Math.abs(b.y-pv.cy)<3);if(k>=0)bridges.splice(k,1)}
 pv.ox=pv.cx*T-pv.ic[0]*pv.s;pv.oy=pv.cy*T-pv.ic[1]*pv.s;
-pv.br=[{x:94.5,y:65.2,ang:-0.565,len:6.6,wid:2.4,flip:1},{x:pv.cx-0.845*5.9,y:pv.cy+0.535*5.9,ang:-0.565,len:6.6,wid:2.4,flip:1}];
+pv.br=[{x:94.5,y:65.2,ang:-0.565,len:6.6,wid:2.4,flip:1},{x:pv.cx-0.845*4.9,y:pv.cy+0.535*4.9,ang:-0.565,len:7.4,wid:2.4,flip:1}];
 // river widened smoothly around the island (same river: union of circles along the centreline, gaussian bulge)
 pv.wide=[];for(let x=pv.cx-14;x<=pv.cx+14;x+=.35){const y=rY(x);pv.wide.push([x,y,river.w/2+3.6*Math.exp(-(((x-pv.cx)/4.6)**2))])}
 const inW=(x,y,d=0)=>pv.wide.some(c=>Math.hypot(x-c[0],y-c[1])<c[2]+d);

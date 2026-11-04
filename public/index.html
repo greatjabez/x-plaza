@@ -10,7 +10,7 @@ button{background:#f6d8e0;border:2px solid #8a6a4f;color:#5f4b3a;font-weight:bol
 button:hover{background:#fbe6ec}button:active{transform:translateY(1px);box-shadow:none}button:disabled{opacity:.6}
 #go{background:#cdebc8}#opts button{background:#fff3e0;padding:0 7px;border-radius:8px;box-shadow:none}
 #chat{position:fixed;left:10px;bottom:10px;width:min(340px,60vw);background:rgba(255,248,236,.92);border:2px solid #8a6a4f;border-radius:14px;font-size:13px;z-index:5;overflow:hidden}
-#log{height:140px;overflow-y:auto;padding:8px;word-break:break-all;color:#5f4b3a}#log .s{color:#b07a9a}#log b{color:#7a5a44}#chat input{margin:0;border:0;border-top:2px solid #e3d2b8;border-radius:0}
+#log{height:140px;overflow-y:auto;padding:8px;word-break:break-all;color:#5f4b3a}#log .s{color:#b07a9a}#log b{color:#7a5a44}#ctg{position:absolute;right:4px;top:4px;z-index:2;font-size:11px;padding:1px 6px;background:#fff3e0;border:1px solid #c9ad8f;border-radius:8px;color:#7a5a44;cursor:pointer}#chat.hid{width:auto}#chat.hid #log,#chat.hid input{display:none}#chat.hid #ctg{position:static;margin:4px}#chat input{margin:0;border:0;border-top:2px solid #e3d2b8;border-radius:0}
 #hud{position:fixed;top:10px;left:10px;background:#fff8ec;border:2px solid #8a6a4f;padding:6px 12px;border-radius:14px;font-size:14px;z-index:5;box-shadow:0 2px 0 #d9c3a5}
 #emo{position:fixed;right:10px;bottom:10px;display:flex;flex-direction:column;gap:5px;z-index:5;background:rgba(255,248,236,.85);border:2px solid #8a6a4f;border-radius:16px;padding:6px}
 #emo button{font-size:19px;padding:3px 8px;background:#fff3e0}#emo small{color:#a08870}
@@ -21,7 +21,7 @@ button:hover{background:#fbe6ec}button:active{transform:translateY(1px);box-shad
 #music{position:fixed;left:10px;top:44px;z-index:6;display:none;align-items:center;gap:6px;background:rgba(255,248,236,.9);border:2px solid #8a6a4f;border-radius:14px;padding:3px 8px;font-size:12px;color:#7a5a44}#music button{background:none;border:none;font-size:16px;cursor:pointer;padding:0 2px}#music.off button{opacity:.4;text-decoration:line-through}#mvol{width:80px;accent-color:#e89aae}</style></head><body>
 <canvas id="c"></canvas>
 <div id="hud">🌲 엑스광장 · 접속자 <b id="on">0</b>명 · <span id="me"></span></div>
-<div id="chat"><div id="log"></div><input id="ci" maxlength="80" placeholder="Enter로 채팅..."></div>
+<div id="chat"><button id="ctg" title="채팅 숨기기/보이기 (C)">💬 숨기기 C</button><div id="log"></div><input id="ci" maxlength="80" placeholder="Enter로 채팅..."></div>
 <div id="emo"></div>
 <div id="music"><button id="mbtn" title="음악 켜기/끄기">🎵</button><input id="mvol" type="range" min="0" max="100" title="볼륨"><span id="mmsg"></span><a href="https://opengameart.org/content/lofi-again" target="_blank" rel="noopener" style="font-size:10px;color:#a08a74;text-decoration:none" title="Lofi again — omfgdude (CC0)">ⓘ</a></div>
 <button id="dressBtn" style="position:fixed;left:10px;top:86px;z-index:6;display:none;font-size:13px;padding:4px 10px">👗 꾸미기</button>
@@ -55,7 +55,7 @@ function buildDress(box){box.innerHTML='';const pr=document.createElement('div')
   L.onclick=e=>{look[k]=(look[k]+arr.length-1)%arr.length;lookChanged();e.currentTarget.blur()};R.onclick=e=>{look[k]=(look[k]+1)%arr.length;lookChanged();e.currentTarget.blur()};
   row.append(lb,L,v,R);box.appendChild(row);upd()})}
 buildDress($('opts'));buildDress($('opts2'));
-EMO.forEach((e,i)=>{const b=document.createElement('button');b.textContent=e;b.title='ZXCVBN'[i];const sm=document.createElement('small');sm.textContent=' '+'ZXCVBN'[i];sm.style.cssText='font-size:10px;opacity:.7';b.appendChild(sm);b.onclick=()=>send({t:'emo',i});$('emo').appendChild(b)});
+EMO.forEach((e,i)=>{const b=document.createElement('button');b.textContent=e;b.title='ZXHVBN'[i];const sm=document.createElement('small');sm.textContent=' '+'ZXHVBN'[i];sm.style.cssText='font-size:10px;opacity:.7';b.appendChild(sm);b.onclick=()=>send({t:'emo',i});$('emo').appendChild(b)});
 const mt=document.createElement('button');mt.textContent='🎭 모션';mt.style.fontSize='14px';$('emo').appendChild(mt);
 function toggleRun(){running=!running;document.querySelectorAll('#mm button').forEach(b=>{if(b.textContent.includes('달리기'))b.classList.toggle('on',running)})}
 const mm=document.createElement('div');mm.id='mm';$('emo').appendChild(mm);mt.onclick=()=>mm.classList.toggle('open');
@@ -189,10 +189,12 @@ $('go').onclick=()=>{let h=$('hd').value.trim().replace(/^@/,'');if(h&&!/^[A-Za-
   else if(m.t=='dead'){dead=1;if(me)me.dieAt=Date.now();setTimeout(()=>{$('dby').textContent=m.by+' 님에게 당했어요. HP가 0이 되었어요.';$('died').style.display='flex'},1300)}};
  ws.onclose=()=>{if(!dead&&$('died').style.display!='flex'&&myId){$('dby').textContent='연결이 끊어졌어요.';$('died').style.display='flex'}}};
 $('nm').onkeydown=e=>!e.isComposing&&e.keyCode!=229&&e.key=='Enter'&&$('go').click();
+function chatTog(h){const c=$('chat');h=h==null?!c.classList.contains('hid'):h;c.classList.toggle('hid',h);$('ctg').textContent=h?'💬 채팅 C':'💬 숨기기 C';try{localStorage.setItem('xp_chat_hid',h?'1':'0')}catch(_){}}
+$('ctg').onclick=e=>{chatTog();e.currentTarget.blur()};chatTog(localStorage.getItem('xp_chat_hid')=='1');
 let ciComp=false;$('ci').addEventListener('compositionstart',()=>ciComp=true);$('ci').addEventListener('compositionend',()=>setTimeout(()=>ciComp=false,0));
 addEventListener('keydown',e=>{if(e.isComposing||e.keyCode==229)return;if(document.activeElement==$('ci')){if(e.key=='Enter'&&!ciComp){const t=$('ci').value.trim();if(t)send({t:'chat',text:t});$('ci').value='';$('ci').blur()}if(e.key=='Escape')$('ci').blur();return}
  if(!myId||document.activeElement.tagName=='INPUT')return;if(e.key=='Enter'){$('ci').focus();e.preventDefault();return}
- const K=e.key.toLowerCase();if(K=='m'){showMini=!showMini;return}const EK='zxcvbn'.indexOf(K);if(EK>=0&&!e.ctrlKey&&!e.metaKey)send({t:'emo',i:EK});
+ const K=e.key.toLowerCase();if(K=='m'){showMini=!showMini;return}if(K=='c'&&!e.ctrlKey&&!e.metaKey&&!e.repeat){chatTog();return}const EK='zxhvbn'.indexOf(K);if(EK>=0&&!e.ctrlKey&&!e.metaKey)send({t:'emo',i:EK});
  const NK={'1':()=>doAct('sit'),'2':()=>doAct('sleep'),'3':()=>doAct('lie'),'4':()=>toggleRun(),'5':()=>doAct('jump'),'6':()=>send({t:'wave'}),'7':()=>doAct('dance'),'8':()=>doAct('cry'),'9':()=>doAct('angry'),'0':()=>{if(WEAPONS)attack()}};
  if(!e.repeat&&NK[e.key])NK[e.key]();if(e.code=='Space'){if(!e.repeat)doAct('jump');e.preventDefault()}if(!['w','a','s','d','shift'].includes(K)&&!K.startsWith('arrow'))return;keys[e.key.toLowerCase()]=1;target=null});
 addEventListener('keyup',e=>{if(document.activeElement&&document.activeElement.tagName=='INPUT')return;keys[e.key.toLowerCase()]=0});addEventListener('blur',()=>{for(const k in keys)keys[k]=0});
