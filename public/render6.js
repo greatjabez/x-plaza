@@ -117,7 +117,6 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
  if(M.tr&&I.terrain){const P=M.tr;gg.save();gg.fillStyle='rgba(80,110,60,.16)';gg.beginPath();gg.ellipse(P.ox+512*P.s,P.oy+700*P.s,470*P.s,70*P.s,0,0,7);gg.fill();gg.restore();gg.drawImage(I.terrain,P.ox,P.oy,P.iw*P.s,P.ih*P.s)}
  // painted raised temple plaza (platform baked; temple, fountain, benches depth-sorted)
  if(M.pz&&I.plaza){const P=M.pz,s=P.s;
-  gg.save();gg.fillStyle='rgba(80,110,60,.16)';gg.beginPath();gg.ellipse(P.ox+512*s+5,P.oy+560*s,345*s,150*s,0,0,7);gg.fill();gg.restore();
   gg.drawImage(I.plaza,P.ox,P.oy,P.iw*s,P.ih*s);
   // extra grass on the platform floor (display coords = logical - TE)
   gg.save();for(let n=0;n<140;n++){const a=H(n,3,91)*Math.PI*2,r=Math.sqrt(H(n,4,91)),u=512+Math.cos(a)*r*290,v=500+Math.sin(a)*r*120;if(u>330&&u<690&&v<455)continue;if(Math.abs(u-512)<95&&Math.abs(v-540)<70)continue;const x=P.ox+u*s,y=P.oy+v*s;
@@ -125,7 +124,7 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
   if(I.temple){const tw=I.temple.width*s,th=I.temple.height*s,[tc,tg]=C(tw,th);tg.drawImage(I.temple,0,0,tw,th);objs.push({img:tc,x:P.ox+340*s,y:P.oy,w:tw,h:th,base:P.oy+447*s+M.TE,k:'temple',low:false,scale:s})}
   const f=spr('fountain',75,true);if(f){anims.push({k:'fdrop',x:P.fountain.x,y:P.fountain.y-M.TE+15-f.h*.62,w:f.w});objs.push({img:f.c,x:Math.round(P.fountain.x-f.w/2),y:Math.round(P.fountain.y-M.TE+15-f.h),w:f.w,h:f.h,base:P.fountain.y+9,k:'fountain',low:false})}
   P.benches.forEach(b=>{const bn=spr('pbench',84,true,b.dir==3);if(bn)objs.push({img:bn.c,x:Math.round(b.x-bn.w/2),y:Math.round(b.y-M.TE+14-bn.h),w:bn.w,h:bn.h,base:b.y+2,k:'bench',low:false})});
-  if(I.statue){const st=P.statue,W2=78,h2=W2*I.statue.height/I.statue.width,[sc,sg]=C(W2,h2);sg.drawImage(I.statue,0,0,W2,h2);gg.save();gg.fillStyle='rgba(70,110,30,.18)';gg.beginPath();gg.ellipse(st.x+3,st.base-st.lift-1,W2*.42,4,0,0,7);gg.fill();gg.restore();objs.push({img:sc,x:Math.round(st.x-W2/2),y:Math.round(st.base-st.lift-h2+2),w:sc.width,h:sc.height,base:st.base,k:'statue',low:false})}
+  if(I.statue){const st=P.statue,W2=78,h2=W2*I.statue.height/I.statue.width,[sc,sg]=C(W2,h2);sg.drawImage(I.statue,0,0,W2,h2);objs.push({img:sc,x:Math.round(st.x-W2/2),y:Math.round(st.base-st.lift-h2+2),w:sc.width,h:sc.height,base:st.base,k:'statue',low:false})}
   objs.sort((a,b)=>a.base-b.base)}
  if(M.pv&&I.pav_island){const q=M.pv,im=I.pav_island,cut=440,[c,g]=C(im.width*q.s,cut*q.s);g.drawImage(im,0,0,im.width,cut,0,0,im.width*q.s,cut*q.s);objs.push({img:c,x:Math.round(q.ox),y:Math.round(q.oy),w:c.width,h:c.height,base:q.oy+470*q.s,k:'pavilion',low:false});objs.sort((a,b)=>a.base-b.base)}
  // painted campfire clearing: decal baked into ground, string-light rig depth-sorted
@@ -147,7 +146,7 @@ function bake(M,I){const T=M.T,W=M.MW*T,Hh=M.MH*T;const cache={};
   const ln=spr('lantern',34);if(ln)(M.ramps||[]).filter(r=>r.lv==1).forEach(r=>[r.x0-14,r.x1+14].forEach(x=>{const by=r.y1-6;objs.push({img:ln.c,x:Math.round(x-ln.w/2),y:Math.round(by-ln.h),w:ln.w,h:ln.h,base:by,k:'lantern',low:false})}));
   objs.sort((a,b)=>a.base-b.base)}
  // soft shadows
- gg.save();objs.forEach(o=>{if(o.k=='bunting'||o.k=='pavilion'||o.k=='lights'||o.k=='rocket'||o.k=='tower')return;const r=o.k=='tree'?o.w*.36:o.w*.38;gg.fillStyle=o.k=='tree'?'rgba(70,100,60,.22)':'rgba(70,100,60,.16)';gg.beginPath();gg.ellipse(o.x+o.w/2+2,o.base-1,r,o.k=='tree'?6:3,0,0,7);gg.fill()});gg.restore();
+ gg.save();objs.forEach(o=>{if(o.k=='bunting'||o.k=='fountain'||o.k=='temple'||o.k=='statue'||o.k=='pavilion'||o.k=='lights'||o.k=='rocket'||o.k=='tower')return;const r=o.k=='tree'?o.w*.36:o.w*.38;gg.fillStyle=o.k=='tree'?'rgba(70,100,60,.22)':'rgba(70,100,60,.16)';gg.beginPath();gg.ellipse(o.x+o.w/2+2,o.base-1,r,o.k=='tree'?6:3,0,0,7);gg.fill()});gg.restore();
  const[wc,wg]=C(W,Hh);wg.drawImage(gc,0,0);objs.forEach(o=>wg.drawImage(o.img,o.x,o.y));
  const GS=64,grid={};objs.forEach((o,i)=>{if(o.low)return;for(let gy=Math.floor(o.y/GS);gy<=Math.floor((o.y+o.h)/GS);gy++)for(let gx=Math.floor(o.x/GS);gx<=Math.floor((o.x+o.w)/GS);gx++)(grid[gx+','+gy]=grid[gx+','+gy]||[]).push(i)});
  const sp=[];for(let n=0;n<4000&&sp.length<500;n++){const x=H(n,1,31)*W|0,y=H(n,2,31)*Hh|0;if(W_(x,y)&&W_(x,y-6)&&W_(x,y+6))sp.push([x,y,H(n,3,31)*10])}

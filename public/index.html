@@ -71,7 +71,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();setZoom(zoomT*Math.exp(-e.del
 {const tp=new Map();let pd0=0,pz0=1;cv.addEventListener('touchstart',e=>{if(e.touches.length==2){const[a,b]=e.touches;pd0=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);pz0=zoomT;target=null}},{passive:true});cv.addEventListener('touchmove',e=>{if(e.touches.length==2&&pd0){const[a,b]=e.touches;setZoom(pz0*Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)/pd0);e.preventDefault()}},{passive:false});cv.addEventListener('touchend',e=>{if(e.touches.length<2)pd0=0})}addEventListener('resize',rs);rs();
 let dead=0,running=false,waves={},M,ws,myId,players={},weapons={},bubbles={},swings={},me=null,keys={},target=null,cam={x:0,y:0},tick=0;
 const STATUE=new Image();STATUE.src='assets/statue.png';const STW=78;
-function drawStatue(B){const s=B.statue;if(!s||!STATUE.complete||!STATUE.naturalWidth)return;const h=STW*STATUE.naturalHeight/STATUE.naturalWidth;ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.fillStyle='rgba(70,110,30,.18)';ctx.beginPath();ctx.ellipse(s.x-cam.x+3,s.base-(s.lift||0)-cam.y-1,STW*.42,4,0,0,7);ctx.fill();ctx.drawImage(STATUE,s.x-STW/2-cam.x,s.base-(s.lift||0)-h-cam.y+2,STW,h);ctx.restore()}
+function drawStatue(B){const s=B.statue;if(!s||!STATUE.complete||!STATUE.naturalWidth)return;const h=STW*STATUE.naturalHeight/STATUE.naturalWidth;ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(STATUE,s.x-STW/2-cam.x,s.base-(s.lift||0)-h-cam.y+2,STW,h);ctx.restore()}
 let musicStarted=false;let mVol=+(localStorage.getItem('xp_vol')??20),mMute=localStorage.getItem('xp_mute')=='1';
 const bgm=new Audio();bgm.loop=true;bgm.preload='none';bgm.src=bgm.canPlayType('audio/ogg; codecs=vorbis')?'assets/bgm.ogg':'assets/bgm.mp3';bgm.volume=0;let fadeT=0;
 function mApply(){$('mvol').value=mVol;$('music').classList.toggle('off',mMute);bgm.muted=mMute;if(!fadeT)bgm.volume=mVol/100}
@@ -127,7 +127,7 @@ function drawCharAt(g,X,Y,p,now){const L=p.look||[0,0,0,0,0],id=p.id||0,act=p.ac
  if(p.shotAt&&now-p.shotAt<80&&p.aim!=null)xo-=Math.round(Math.cos(p.aim)*1.5);
  if(p.dieAt){rot=-Math.min(1,(now-p.dieAt)/450)*Math.PI/2;P='0,0,0,0,0,0,'}
  const sp=sprite(L,dir,P,'',bl||p.dieAt),img=p.hitUntil>now&&Math.floor(now/60)%2?white(sp):sp;
- g.fillStyle='rgba(0,0,0,.22)';const sw=Math.round((rot?26:16)*sh);g.fillRect(X-sw/2,Y,sw,2);
+ {const sw=(rot?13:8)*sh,gr=g.createRadialGradient(X,Y+1,0,X,Y+1,sw);gr.addColorStop(0,'rgba(40,40,30,.16)');gr.addColorStop(1,'rgba(40,40,30,0)');g.save();g.fillStyle=gr;g.beginPath();g.ellipse(X,Y+1,sw,sw*.38,0,0,7);g.fill();g.restore()}
 
  const gb=(dir==1)&&!rot&&!sit;if(gb&&WEAPONS)drawGun(g,X+xo,Y,p,now,yo);
  const _sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
