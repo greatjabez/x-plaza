@@ -28,12 +28,12 @@ button:hover{background:#fbe6ec}button:active{transform:translateY(1px);box-shad
 <div id="dress" class="card" style="position:fixed;left:10px;top:122px;z-index:9;display:none;width:260px;padding:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>👗 꾸미기</b><button id="dressX" style="padding:0 8px;font-size:12px">닫기</button></div><div style="display:flex;gap:8px;align-items:center"><canvas id="pv2" width="96" height="144" style="width:72px;height:108px;background:#e6f3dc;border:2px solid #8a6a4f;border-radius:12px"></canvas><div id="opts2" style="flex:1"></div></div><div style="font-size:10px;opacity:.6;margin-top:6px">곧 상점 아이템이 추가될 예정이에요 ✨</div></div>
 <div id="prof" class="card" style="width:200px;padding:12px"></div>
 <div id="join" class="ov"><div class="card"><h1>🌲 엑스광장 🔥</h1>
-<label>닉네임</label><input id="nm" maxlength="12" placeholder="이름을 입력하세요">
-<label>X 핸들 (선택)</label><input id="hd" maxlength="16" placeholder="@handle"><div id="he" class="err"></div>
+<label>닉네임</label><input id="nm" placeholder="이름을 입력하세요 (한글/English)" autocomplete="off" lang="ko">
+<label>X 핸들 (선택)</label><input id="hd" maxlength="16" value="@" placeholder="@handle" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="latin"><div id="he" class="err"></div>
 <div style="display:flex;gap:10px;align-items:center"><canvas id="pv" width="96" height="144" style="width:72px;height:108px;background:#e6f3dc;border:2px solid #8a6a4f;border-radius:12px"></canvas>
 <div id="opts" style="flex:1;font-size:13px"></div></div>
 <button id="go" disabled style="width:100%;margin-top:10px">마을 불러오는 중...</button>
-<p style="font-size:12px;opacity:.8">이동 WASD/방향키/터치 · 모션 1앉기 2자기 3눕기 4달리기(Shift 누르기) 5점프(Space) 6인사 7춤 8울기 9화내기 · 🔍 확대/축소: 마우스 휠 · X 프로필: 캐릭터 오른쪽 클릭 → 프로필 방문하기 · 이모지 Z X C V B N · Enter 채팅 · 의자 옆에서 1 또는 클릭하면 앉아요</p></div></div>
+<p style="font-size:12px;opacity:.8">이동 WASD/방향키/터치 · 모션 1앉기 2자기 3눕기 4달리기(Shift 누르기) 5점프(Space) 6인사 7춤 8울기 9화내기 · 🔍 확대/축소: 마우스 휠 · X 프로필: 캐릭터 오른쪽 클릭 → 프로필 방문하기 · 이모지 Z X H V B N · C 채팅 숨기기 · Enter 채팅 · 의자 옆에서 1 또는 클릭하면 앉아요</p></div></div>
 <div id="died" class="ov" style="display:none"><div class="card" style="text-align:center"><h1>💀 쓰러졌어요</h1><p id="dby"></p><button onclick="location.reload()">다시 접속하기</button></div></div>
 <script src="mapgen.js"></script><script src="items.js"></script><script src="chars3.js"></script><script src="render.js"></script><script src="render6.js"></script><script src="daynight.js"></script>
 <script>
@@ -204,7 +204,12 @@ $('go').onclick=()=>{let h=$('hd').value.trim().replace(/^@/,'');if(h&&!/^[A-Za-
   else if(m.t=='hit'){const P=players[m.id];if(P){P.hitUntil=Date.now()+300;if(m.id==myId){me.rx+=m.kx||0;me.ry+=m.ky||0}}}
   else if(m.t=='dead'){dead=1;if(me)me.dieAt=Date.now();setTimeout(()=>{$('dby').textContent=m.by+' 님에게 당했어요. HP가 0이 되었어요.';$('died').style.display='flex'},1300)}};
  ws.onclose=()=>{if(!dead&&$('died').style.display!='flex'&&myId){$('dby').textContent='연결이 끊어졌어요.';$('died').style.display='flex'}}};
-$('nm').onkeydown=e=>!e.isComposing&&e.keyCode!=229&&e.key=='Enter'&&$('go').click();
+{const nm=$('nm'),hd=$('hd');let nmComp=false;const capN=()=>{const a=[...nm.value];if(a.length>12)nm.value=a.slice(0,12).join('')};
+ nm.addEventListener('compositionstart',()=>nmComp=true);nm.addEventListener('compositionend',()=>{nmComp=false;capN()});nm.addEventListener('input',e=>{if(!nmComp&&!e.isComposing)capN()});
+ nm.addEventListener('keydown',e=>{if(!e.isComposing&&e.keyCode!=229&&e.key=='Enter'&&!nmComp)$('go').click()});
+ const fixH=()=>{const v='@'+hd.value.replace(/@/g,'').replace(/\s/g,'');if(hd.value!==v){const c=hd.selectionStart;hd.value=v;const q=Math.max(1,Math.min(v.length,c||v.length));hd.setSelectionRange(q,q)}};
+ hd.addEventListener('input',fixH);hd.addEventListener('keydown',e=>{if((e.key=='Backspace'&&hd.selectionStart<=1&&hd.selectionEnd<=1)||(e.key=='Home')){e.preventDefault();hd.setSelectionRange(1,1)}if(e.key=='Enter'&&!e.isComposing)$('go').click()});
+ hd.addEventListener('focus',()=>{if(!hd.value.startsWith('@'))fixH();setTimeout(()=>{if(hd.selectionStart<1)hd.setSelectionRange(1,1)},0)});fixH()}
 function chatTog(h){const c=$('chat');h=h==null?!c.classList.contains('hid'):h;c.classList.toggle('hid',h);$('ctg').textContent=h?'💬 채팅 C':'💬 숨기기 C';try{localStorage.setItem('xp_chat_hid',h?'1':'0')}catch(_){}}
 $('ctg').onclick=e=>{chatTog();e.currentTarget.blur()};chatTog(localStorage.getItem('xp_chat_hid')=='1');
 let ciComp=false;$('ci').addEventListener('compositionstart',()=>ciComp=true);$('ci').addEventListener('compositionend',()=>setTimeout(()=>ciComp=false,0));
